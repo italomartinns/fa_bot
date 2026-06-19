@@ -265,7 +265,7 @@ function bindEventHandlers() {
         });
 
         const data = await resp.json().catch(() => ({}));
-        const generated = data && (data.generated_text || data.generatedText || data.answer || "");
+        const generated = data && data.generated_text ? data.generated_text : "";
 
         const lastIdx = conversation.messages.length - 1;
         conversation.messages[lastIdx].text = generated || "Sem resposta do agente.";

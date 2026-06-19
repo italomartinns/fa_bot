@@ -7,7 +7,6 @@ const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configurar pool de conexão com Neon PostgreSQL
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
@@ -16,7 +15,6 @@ const pool = new Pool({
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// Headers de segurança
 function securityHeaders(req, res, next) {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
@@ -27,7 +25,6 @@ function securityHeaders(req, res, next) {
 
 app.use(securityHeaders);
 
-// Inicializar banco de dados (criar tabelas se não existirem)
 async function initializeDatabase() {
   try {
     await pool.query(`
@@ -72,17 +69,14 @@ async function initializeDatabase() {
   }
 }
 
-// Normalizar username
 function normalizeUsername(value) {
   return value.trim().toLowerCase();
 }
 
-// Rota raiz
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// POST /api/register - Criar novo usuário
 app.post("/api/register", async (req, res) => {
   try {
     const { name, username, password } = req.body || {};
@@ -113,7 +107,6 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
-// POST /api/login - Autenticar usuário
 app.post("/api/login", async (req, res) => {
   try {
     const { username, password } = req.body || {};
@@ -141,7 +134,6 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// POST /api/profile - Salvar perfil demográfico
 app.post("/api/profile", async (req, res) => {
   try {
     const { userId, sex, age, maritalStatus, caregiver } = req.body || {};
@@ -188,7 +180,6 @@ app.post("/api/profile", async (req, res) => {
   }
 });
 
-// POST /api/adks - Salvar respostas ADKS
 app.post("/api/adks", async (req, res) => {
   try {
     const { userId, answers } = req.body || {};
@@ -203,7 +194,6 @@ app.post("/api/adks", async (req, res) => {
       return res.status(400).json({ message: "Respostas do ADKS inválidas." });
     }
 
-    // Validar respostas
     for (const entry of answers) {
       const questionId = Number(entry?.questionId);
       if (!Number.isInteger(questionId) || questionId < 1 || questionId > 30) {
@@ -214,7 +204,6 @@ app.post("/api/adks", async (req, res) => {
       }
     }
 
-    // Verificar se perfil existe
     const profileCheck = await pool.query(
       "SELECT 1 FROM profile_questionnaire WHERE user_id = $1",
       [parsedUserId]
@@ -224,10 +213,8 @@ app.post("/api/adks", async (req, res) => {
       return res.status(400).json({ message: "Perfil não encontrado. Preencha o questionário primeiro." });
     }
 
-    // Deletar respostas antigas
     await pool.query("DELETE FROM adks_answers WHERE user_id = $1", [parsedUserId]);
 
-    // Inserir novas respostas
     for (const answer of answers) {
       await pool.query(
         "INSERT INTO adks_answers (user_id, question_id, answer) VALUES ($1, $2, $3)",
@@ -274,7 +261,6 @@ app.post("/api/onboarding-status", async (req, res) => {
   }
 });
 
-// POST /api/agent - Consultar agente IA via n8n
 app.post("/api/agent", async (req, res) => {
   try {
     const { pergunta, userId } = req.body || {};
@@ -282,17 +268,15 @@ app.post("/api/agent", async (req, res) => {
     if (!pergunta) {
       return res.status(400).json({ message: "Pergunta não fornecida." });
     }
-
     const webhookUrl = process.env.AGENT_WEBHOOK;
     const agentSecret = process.env.AGENT_SECRET;
 
     if (!webhookUrl) {
       console.warn("⚠️ AGENT_WEBHOOK não configurada, usando resposta mock");
       const mockResponse = `Entendi sua pergunta: "${pergunta}". Estou aqui para ajudar com informações sobre o Alzheimer.`;
-      return res.json({ answer: mockResponse });
+      return res.json({ generated_text: mockResponse });
     }
 
-    // Chamar webhook do n8n
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
@@ -308,28 +292,24 @@ app.post("/api/agent", async (req, res) => {
     }
 
     const data = await response.json();
-    res.json({ answer: data.answer || data.response || data.text || "Sem resposta do agente." });
+    const generatedText = data.generated_text || "Sem resposta do agente.";
+
+    res.json({ generated_text: generatedText });
   } catch (error) {
     console.error("Erro /api/agent:", error.message);
     res.status(500).json({ message: "Erro ao processar pergunta." });
   }
 });
 
-// Tratamento de erro 404
 app.use((req, res) => {
   res.status(404).json({ message: "Rota não encontrada." });
 });
 
-// Iniciar servidor
 async function startServer() {
   try {
-    // Testar conexão com banco
     await pool.query("SELECT NOW()");
     console.log("✅ Conectado ao Neon PostgreSQL");
-
-    // Inicializar banco
     await initializeDatabase();
-
     app.listen(PORT, () => {
       console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
     });
@@ -341,7 +321,6 @@ async function startServer() {
 
 startServer();
 
-// Graceful shutdown
 process.on("SIGINT", async () => {
   console.log("\nEncerrando servidor...");
   await pool.end();
