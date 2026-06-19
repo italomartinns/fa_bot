@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro - FA Chat</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="auth-body">
+    <div class="ambient-shape shape-1"></div>
+    <div class="ambient-shape shape-2"></div>
+
+    <main class="auth-shell">
+      <section class="auth-card">
+        <div>
+          <p class="eyebrow">Bem-vindo</p>
+          <h1 class="auth-title">Criar conta</h1>
+          <p class="auth-subtitle">Preencha seus dados para comecar.</p>
+        </div>
+
+        <div id="formError" class="form-error" role="alert"></div>
+
+        <form id="registerForm" class="auth-form" autocomplete="off">
+          <div class="auth-field">
+            <label for="registerName">Seu nome</label>
+            <input id="registerName" name="name" type="text" required />
+          </div>
+          <div class="auth-field">
+            <label for="registerUsername">Username</label>
+            <input id="registerUsername" name="username" type="text" required />
+          </div>
+          <div class="auth-field">
+            <label for="registerPassword">Senha</label>
+            <input id="registerPassword" name="password" type="password" required />
+          </div>
+          <div class="auth-field">
+            <label for="registerConfirm">Confirmar senha</label>
+            <input id="registerConfirm" name="confirm" type="password" required />
+          </div>
+          <button class="auth-submit" type="submit">Cadastrar</button>
+        </form>
+
+        <p class="auth-footer">
+          Ja possui conta?
+          <a href="login.html">Fazer login</a>
+        </p>
+      </section>
+    </main>
+
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+  </body>
+</html>

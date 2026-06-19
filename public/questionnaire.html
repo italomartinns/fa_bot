@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Questionario - Forcare Alzheimer</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="auth-body">
+    <div class="ambient-shape shape-1"></div>
+    <div class="ambient-shape shape-2"></div>
+
+    <main class="auth-shell questionnaire-shell">
+      <section class="auth-card questionnaire-card">
+        <div>
+          <p class="eyebrow">Questionarios</p>
+          <h1 class="auth-title" id="questionnaireTitle">Questionário Sócio-Demográfico</h1>
+          <p class="auth-subtitle" id="questionnaireSubtitle">
+            Responda rapidamente para iniciar o atendimento.
+          </p>
+        </div>
+
+        <div id="questionnaireError" class="form-error" role="alert"></div>
+
+        <section id="profileSection" class="questionnaire-section">
+          <form id="profileForm" class="auth-form" autocomplete="off">
+            <div class="auth-field">
+              <label>Qual o seu sexo?</label>
+              <div class="option-group">
+                <label>
+                  <input type="radio" name="sex" value="Feminino" required />
+                  Feminino
+                </label>
+                <label>
+                  <input type="radio" name="sex" value="Masculino" />
+                  Masculino
+                </label>
+                <label>
+                  <input type="radio" name="sex" value="Prefiro nao responder" />
+                  Prefiro não responder
+                </label>
+              </div>
+            </div>
+
+            <div class="auth-field">
+              <label for="profileAge">Qual é a sua idade</label>
+              <input id="profileAge" name="age" type="number" min="1" step="1" required />
+            </div>
+
+            <div class="auth-field">
+              <label for="profileMarital">Qual é o seu estado civil?</label>
+              <select id="profileMarital" name="maritalStatus" required>
+                <option value="">Selecione</option>
+                <option value="Casado">Casado</option>
+                <option value="Uniao estavel">União estável</option>
+                <option value="Solteiro">Solteiro</option>
+                <option value="Divorciado">Divorciado</option>
+                <option value="Viuvo">Viúvo</option>
+              </select>
+            </div>
+
+            <div class="auth-field">
+              <label>Você cuida atualmente de uma pessoa idosa com diagnóstico de Alzheimer?</label>
+              <div class="option-group">
+                <label>
+                  <input type="radio" name="caregiver" value="Sim" required />
+                  Sim
+                </label>
+                <label>
+                  <input type="radio" name="caregiver" value="Nao" />
+                  Nao
+                </label>
+              </div>
+            </div>
+
+            <button class="auth-submit" type="submit">Confirmar perfil</button>
+          </form>
+        </section>
+
+        <section id="adksSection" class="questionnaire-section">
+          <form id="adksForm" class="auth-form" autocomplete="off">
+            <div id="adksQuestions" class="adks-list"></div>
+            <button class="auth-submit" type="submit">Confirmar respostas</button>
+          </form>
+        </section>
+      </section>
+    </main>
+
+    <div
+      class="notice-modal"
+      id="noticeModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="noticeTitle"
+    >
+      <div class="notice-card">
+        <p class="sr-only" id="noticeTitle">Aviso</p>
+        <p id="noticeMessage"></p>
+        <button class="auth-submit" id="noticeOk" type="button">OK</button>
+      </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="questionnaire.js"></script>
+  </body>
+</html>

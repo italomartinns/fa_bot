@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - FA Chat</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="auth-body">
+    <div class="ambient-shape shape-1"></div>
+    <div class="ambient-shape shape-2"></div>
+
+    <main class="auth-shell">
+      <section class="auth-card">
+        <div>
+          <p class="eyebrow">Acesso</p>
+          <h1 class="auth-title">Entrar</h1>
+          <p class="auth-subtitle">Use seu username para acessar.</p>
+        </div>
+
+        <div id="formError" class="form-error" role="alert"></div>
+
+        <form id="loginForm" class="auth-form" autocomplete="off">
+          <div class="auth-field">
+            <label for="loginUsername">Username</label>
+            <input id="loginUsername" name="username" type="text" required />
+          </div>
+          <div class="auth-field">
+            <label for="loginPassword">Senha</label>
+            <input id="loginPassword" name="password" type="password" required />
+          </div>
+          <button class="auth-submit" type="submit">Entrar</button>
+        </form>
+
+        <p class="auth-footer">
+          Ainda nao tem conta?
+          <a href="register.html">Criar cadastro</a>
+        </p>
+      </section>
+    </main>
+
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+  </body>
+</html>

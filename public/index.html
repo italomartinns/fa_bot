@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Forcare Alzheimer</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="ambient-shape shape-1"></div>
+    <div class="ambient-shape shape-2"></div>
+
+    <main class="app-shell">
+      <aside class="chat-list-panel">
+        <div class="panel-header">
+          <p class="eyebrow">Atendimento</p>
+          <h1>Forcare Alzheimer</h1>
+          <button class="new-chat-btn" type="button">Nova conversa</button>
+        </div>
+
+        <nav class="conversation-list" aria-label="Lista de conversas" id="conversationList">
+        </nav>
+      </aside>
+
+      <section class="chat-panel" aria-label="Janela de conversa">
+        <header class="chat-header">
+          <div>
+            <p class="eyebrow">Conversa ativa</p>
+            <h2><span id="chatTitle"></span></h2>
+            <p class="chat-user">Logado como <strong id="currentUserName"></strong></p>
+          </div>
+          <div class="chat-actions">
+            <span class="status-pill">Conectado</span>
+            <button class="logout-btn" id="logoutBtn" type="button">Sair</button>
+          </div>
+        </header>
+
+      <div class="messages" id="messages" aria-live="polite"></div>
+
+        <form class="composer" id="composer" autocomplete="off">
+          <label class="sr-only" for="messageInput">Digite sua mensagem</label>
+          <input
+            id="messageInput"
+            name="message"
+            type="text"
+            placeholder="Digite sua mensagem..."
+            required
+          />
+          <button type="submit">Enviar</button>
+        </form>
+      </section>
+    </main>
+
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
