@@ -42,7 +42,7 @@ async function initializeDatabase() {
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL UNIQUE,
         sex TEXT NOT NULL,
-        age INTEGER NOT NULL,
+        date_of_birth DATE NOT NULL,
         marital_status TEXT NOT NULL,
         caregiver BOOLEAN NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -136,10 +136,9 @@ app.post("/api/login", async (req, res) => {
 
 app.post("/api/profile", async (req, res) => {
   try {
-    const { userId, sex, age, maritalStatus, caregiver } = req.body || {};
+    const { userId, sex, dateOfBirth, maritalStatus, caregiver } = req.body || {};
 
     const parsedUserId = Number(userId);
-    const parsedAge = Number(age);
 
     if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) {
       return res.status(400).json({ message: "Usuário inválido." });
@@ -149,12 +148,19 @@ app.post("/api/profile", async (req, res) => {
       return res.status(400).json({ message: "Sexo inválido." });
     }
 
-    if (!["Casado", "União estável", "Solteiro", "Divorciado", "Viúvo"].includes(maritalStatus)) {
-      return res.status(400).json({ message: "Estado civil inválido." });
+    const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+    if (!dateRegex.test(dateOfBirth)) {
+      return res.status(400).json({ message: "Data de nascimento inválida. Use o formato DD/MM/YYYY." });
     }
 
-    if (!Number.isInteger(parsedAge) || parsedAge <= 0 || parsedAge > 150) {
-      return res.status(400).json({ message: "Idade inválida." });
+    const [day, month, year] = dateOfBirth.split('/').map(Number);
+    const dob = new Date(year, month - 1, day);
+    if (isNaN(dob.getTime())) {
+      return res.status(400).json({ message: "Data de nascimento inválida." });
+    }
+
+    if (!["Casado", "União estável", "Solteiro", "Divorciado", "Viúvo"].includes(maritalStatus)) {
+      return res.status(400).json({ message: "Estado civil inválido." });
     }
 
     if (typeof caregiver !== "boolean") {
@@ -162,15 +168,15 @@ app.post("/api/profile", async (req, res) => {
     }
 
     await pool.query(
-      `INSERT INTO profile_questionnaire (user_id, sex, age, marital_status, caregiver) 
+      `INSERT INTO profile_questionnaire (user_id, sex, date_of_birth, marital_status, caregiver) 
        VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT(user_id) DO UPDATE SET
        sex = EXCLUDED.sex,
-       age = EXCLUDED.age,
+       date_of_birth = EXCLUDED.date_of_birth,
        marital_status = EXCLUDED.marital_status,
        caregiver = EXCLUDED.caregiver,
        updated_at = CURRENT_TIMESTAMP`,
-      [parsedUserId, sex, parsedAge, maritalStatus, caregiver]
+      [parsedUserId, sex, dob, maritalStatus, caregiver]
     );
 
     res.json({ ok: true });

@@ -211,20 +211,20 @@ async function initializeQuestionnaire() {
       clearError();
 
       const sex = document.querySelector('input[name="sex"]:checked')?.value;
-      const ageInput = document.getElementById("profileAge");
+      const dateOfBirthInput = document.getElementById("profileDateOfBirth");
       const maritalSelect = document.getElementById("profileMarital");
       const caregiver = document.querySelector('input[name="caregiver"]:checked')?.value;
-      const ageValue = ageInput ? ageInput.value.trim() : "";
-      const age = Number(ageValue);
+      const dateOfBirth = dateOfBirthInput ? dateOfBirthInput.value.trim() : "";
       const maritalStatus = maritalSelect ? maritalSelect.value : "";
 
-      if (!sex || !maritalStatus || !caregiver) {
+      if (!sex || !maritalStatus || !caregiver || !dateOfBirth) {
         showError("Responda todas as perguntas do perfil.");
         return;
       }
 
-      if (!Number.isInteger(age) || age <= 0) {
-        showError("Informe uma idade valida.");
+      const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+      if (!dateRegex.test(dateOfBirth)) {
+        showError("Informe uma data de nascimento válida no formato DD/MM/YYYY.");
         return;
       }
 
@@ -234,7 +234,7 @@ async function initializeQuestionnaire() {
         await apiPost("/api/profile", {
           userId: user.id,
           sex,
-          age,
+          dateOfBirth,
           maritalStatus,
           caregiver: isCaregiver,
         });
