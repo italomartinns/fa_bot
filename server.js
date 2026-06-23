@@ -155,7 +155,9 @@ app.post("/api/profile", async (req, res) => {
 
     const [day, month, year] = dateOfBirth.split('/').map(Number);
     const dob = new Date(year, month - 1, day);
-    if (isNaN(dob.getTime())) {
+    
+    // Validate date components to prevent "date overflow" (e.g., Feb 30th becoming March 2nd)
+    if (isNaN(dob.getTime()) || dob.getDate() !== day || dob.getMonth() !== month - 1 || dob.getFullYear() !== year) {
       return res.status(400).json({ message: "Data de nascimento inválida." });
     }
 

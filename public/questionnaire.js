@@ -206,6 +206,11 @@ async function initializeQuestionnaire() {
   }
 
   if (profileForm) {
+    const dateOfBirthInput = document.getElementById("profileDateOfBirth");
+    if (dateOfBirthInput) {
+      dateOfBirthInput.addEventListener("input", formatDateInput);
+    }
+
     profileForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       clearError();
@@ -286,3 +291,20 @@ async function initializeQuestionnaire() {
 }
 
 initializeQuestionnaire();
+
+function formatDateInput(event) {
+  let input = event.target.value.replace(/\D/g, ''); // Remove non-digits
+  let formattedInput = '';
+
+  if (input.length > 0) {
+    formattedInput += input.substring(0, 2); // DD
+  }
+  if (input.length > 2) {
+    formattedInput += '/' + input.substring(2, 4); // MM
+  }
+  if (input.length > 4) {
+    formattedInput += '/' + input.substring(4, 8); // YYYY
+  }
+
+  event.target.value = formattedInput;
+}
