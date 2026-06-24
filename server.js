@@ -269,6 +269,27 @@ app.post("/api/onboarding-status", async (req, res) => {
   }
 });
 
+
+app.post("/api/verify-user", async (req, res) => {
+  try {
+    const { userId } = req.body || {};
+    const parsedUserId = Number(userId);
+
+    if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) {
+      return res.status(400).json({ message: "Usuário inválido." });
+    }
+
+    const result = await pool.query("SELECT 1 FROM users WHERE id = $1", [
+      parsedUserId,
+    ]);
+
+    res.json({ exists: result.rows.length > 0 });
+  } catch (error) {
+    console.error("Erro /api/verify-user:", error);
+    res.status(500).json({ message: "Erro ao verificar usuário." });
+  }
+});
+
 app.post("/api/agent", async (req, res) => {
   try {
     const { pergunta, userId } = req.body || {};

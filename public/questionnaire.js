@@ -11,6 +11,7 @@ const adksQuestions = document.getElementById("adksQuestions");
 const errorEl = document.getElementById("questionnaireError");
 const questionnaireTitle = document.getElementById("questionnaireTitle");
 const questionnaireSubtitle = document.getElementById("questionnaireSubtitle");
+const logoutButton = document.getElementById("logoutButton");
 
 const STAGE_COPY = {
   profile: {
@@ -65,11 +66,15 @@ function getCurrentUser() {
   }
 }
 
+function logout() {
+  localStorage.removeItem(CURRENT_USER_KEY);
+  window.location.href = "login.html";
+}
+
 function requireUser() {
   const user = getCurrentUser();
   if (!user || !user.id) {
-    localStorage.removeItem(CURRENT_USER_KEY);
-    window.location.href = "login.html";
+    logout();
     return null;
   }
   return user;
@@ -170,9 +175,39 @@ function buildAdksQuestions() {
   });
 }
 
+function formatDateInput(event) {
+  let input = event.target.value.replace(/\D/g, '');
+  let formattedInput = '';
+
+  if (input.length > 0) {
+    formattedInput += input.substring(0, 2);
+  }
+  if (input.length > 2) {
+    formattedInput += '/' + input.substring(2, 4);
+  }
+  if (input.length > 4) {
+    formattedInput += '/' + input.substring(4, 8);
+  }
+
+  event.target.value = formattedInput;
+}
+
 async function initializeQuestionnaire() {
   const user = requireUser();
   if (!user) return;
+
+  try {
+    const verification = await apiPost("/api/verify-user", { userId: user.id });
+    if (!verification.exists) {
+      logout();
+      return;
+    }
+  } catch (error) {
+    showError(error.message || "Erro ao verificar usuário.");
+    return;
+  }
+
+  const userName = user.name;
 
   buildAdksQuestions();
 
@@ -191,14 +226,14 @@ async function initializeQuestionnaire() {
 
   if (status?.profileCompleted) {
     showNotice(
-      "Obrigado! Agora vamos iniciar o questionário ADKS com 30 perguntas de Verdadeiro ou Falso.",
+      `Obrigado, ${userName}! Agora vamos iniciar o questionário ADKS com 30 perguntas de Verdadeiro ou Falso.`,
       () => {
         showSection(adksSection, "adks");
       }
     );
   } else {
     showNotice(
-      "Olá! Sou seu assistente de apoio para cuidadores familiares. Vou começar com algumas perguntas rápidas sobre você e sua situação, para depois aplicar o questionário de conhecimento sobre Alzheimer. Vamos lá!",
+      `Olá, ${userName}! Sou seu assistente de apoio para cuidadores familiares. Vou começar com algumas perguntas rápidas sobre você e sua situação, para depois aplicar o questionário de conhecimento sobre Alzheimer. Vamos lá!`,
       () => {
         showSection(profileSection, "profile");
       }
@@ -245,7 +280,7 @@ async function initializeQuestionnaire() {
         });
 
         showNotice(
-          "Obrigado! Agora vamos iniciar o questionário ADKS com 30 perguntas de Verdadeiro ou Falso.",
+          `Obrigado, ${userName}! Agora vamos iniciar o questionário ADKS com 30 perguntas de Verdadeiro ou Falso.`,
           () => {
             showSection(adksSection, "adks");
           }
@@ -290,21 +325,8 @@ async function initializeQuestionnaire() {
   }
 }
 
-initializeQuestionnaire();
-
-function formatDateInput(event) {
-  let input = event.target.value.replace(/\D/g, ''); // Remove non-digits
-  let formattedInput = '';
-
-  if (input.length > 0) {
-    formattedInput += input.substring(0, 2); // DD
-  }
-  if (input.length > 2) {
-    formattedInput += '/' + input.substring(2, 4); // MM
-  }
-  if (input.length > 4) {
-    formattedInput += '/' + input.substring(4, 8); // YYYY
-  }
-
-  event.target.value = formattedInput;
+if (logoutButton) {
+  logoutButton.addEventListener("click", logout);
 }
+
+initializeQuestionnaire();
