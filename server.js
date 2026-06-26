@@ -335,23 +335,24 @@ app.post("/api/agent", async (req, res) => {
           };
         });
 
-        const profileResult = await pool.query(
-          `SELECT u.name, p.sex, p.date_of_birth, p.caregiver
-           FROM users u
-           JOIN profile_questionnaire p ON u.id = p.user_id
-           WHERE u.id = $1`,
-          [parsedUserId]
-        );
+const profileResult = await pool.query(
+  `SELECT u.name, u.username, p.sex, p.date_of_birth, p.caregiver
+   FROM users u
+   JOIN profile_questionnaire p ON u.id = p.user_id
+   WHERE u.id = $1`,
+  [parsedUserId]
+);
 
-        if (profileResult.rows.length > 0) {
-          const profile = profileResult.rows[0];
-          webhookPayload.userProfile = {
-            name: profile.name,
-            genero: profile.sex,
-            data_de_nascimento: profile.date_of_birth,
-            caregiver: profile.caregiver,
-          };
-        }
+if (profileResult.rows.length > 0) {
+  const profile = profileResult.rows[0];
+  webhookPayload.userProfile = {
+    name: profile.name,
+    username: profile.username,
+    genero: profile.sex,
+    data_de_nascimento: profile.date_of_birth,
+    caregiver: profile.caregiver,
+  };
+}
       }
     }
 
