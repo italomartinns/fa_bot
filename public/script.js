@@ -139,7 +139,7 @@ function appendMessage(text, type, timeStr = null) {
   const article = document.createElement("article");
   article.className = `message ${type}`;
   const p = document.createElement("p");
-  p.textContent = text;
+  p.innerHTML = text.replace(/\n/g, "<br>");
   const time = document.createElement("time");
   time.textContent = timeStr || currentTime();
 
@@ -261,7 +261,7 @@ function bindEventHandlers() {
         const resp = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pergunta: value }),
+          body: JSON.stringify({ pergunta: value, userId: getCurrentUser()?.id }),
         });
 
         const data = await resp.json().catch(() => ({}));

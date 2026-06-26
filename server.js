@@ -3,6 +3,11 @@ const express = require("express");
 const path = require("path");
 const { Pool } = require("pg");
 const bcrypt = require("bcryptjs");
+const {
+  ADKS_QUESTIONS,
+  ADKS_EXPLANATIONS,
+  ADKS_CORRECT_ANSWERS,
+} = require("./public/adks_data.js");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -57,6 +62,7 @@ async function initializeDatabase() {
         user_id INTEGER NOT NULL,
         question_id INTEGER NOT NULL,
         answer BOOLEAN NOT NULL,
+        has_the_knowledge BOOLEAN NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(user_id, question_id),
         FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -66,6 +72,7 @@ async function initializeDatabase() {
     console.log("✅ Banco de dados inicializado");
   } catch (error) {
     console.error("❌ Erro ao inicializar banco:", error.message);
+    throw error;
   }
 }
 
@@ -190,7 +197,7 @@ app.post("/api/profile", async (req, res) => {
 
 app.post("/api/adks", async (req, res) => {
   try {
-    const { userId, answers } = req.body || {};
+    const { userId, answers, incorrectAnswersDetails } = req.body || {};
 
     const parsedUserId = Number(userId);
 
@@ -207,7 +214,7 @@ app.post("/api/adks", async (req, res) => {
       if (!Number.isInteger(questionId) || questionId < 1 || questionId > 30) {
         return res.status(400).json({ message: "Respostas do ADKS inválidas." });
       }
-      if (typeof entry?.answer !== "boolean") {
+      if (typeof entry?.answer !== "boolean" || typeof entry?.hasTheKnowledge !== "boolean") {
         return res.status(400).json({ message: "Respostas do ADKS inválidas." });
       }
     }
@@ -225,12 +232,13 @@ app.post("/api/adks", async (req, res) => {
 
     for (const answer of answers) {
       await pool.query(
-        "INSERT INTO adks_answers (user_id, question_id, answer) VALUES ($1, $2, $3)",
-        [parsedUserId, answer.questionId, answer.answer]
+        "INSERT INTO adks_answers (user_id, question_id, answer, has_the_knowledge) VALUES ($1, $2, $3, $4)",
+        [parsedUserId, answer.questionId, answer.answer, answer.hasTheKnowledge]
       );
     }
 
     res.json({ ok: true });
+    
   } catch (error) {
     console.error("Erro /api/adks:", error);
     res.status(500).json({ message: "Erro ao salvar ADKS." });
@@ -297,6 +305,56 @@ app.post("/api/agent", async (req, res) => {
     if (!pergunta) {
       return res.status(400).json({ message: "Pergunta não fornecida." });
     }
+
+    let webhookPayload = {
+      pergunta,
+      userId,
+      incorrectAnswersDetails: [],
+      userProfile: null,
+    };
+
+    if (userId) {
+      const parsedUserId = Number(userId);
+      if (Number.isInteger(parsedUserId) && parsedUserId > 0) {
+
+        const answersResult = await pool.query(
+          "SELECT question_id, answer FROM adks_answers WHERE user_id = $1 AND has_the_knowledge = false",
+          [parsedUserId]
+        );
+        
+        webhookPayload.incorrectAnswersDetails = answersResult.rows.map(row => {
+          const questionId = row.question_id;
+          const question = ADKS_QUESTIONS.find(q => q.id === questionId);
+          
+          return {
+            questionId: questionId,
+            adks_question: question ? question.text : "Pergunta não encontrada.",
+            userAnswer: row.answer,
+            correct_answer: ADKS_CORRECT_ANSWERS[questionId],
+            adks_explanation: ADKS_EXPLANATIONS[questionId] || "Explicação não encontrada.",
+          };
+        });
+
+        const profileResult = await pool.query(
+          `SELECT u.name, p.sex, p.date_of_birth, p.caregiver
+           FROM users u
+           JOIN profile_questionnaire p ON u.id = p.user_id
+           WHERE u.id = $1`,
+          [parsedUserId]
+        );
+
+        if (profileResult.rows.length > 0) {
+          const profile = profileResult.rows[0];
+          webhookPayload.userProfile = {
+            name: profile.name,
+            genero: profile.sex,
+            data_de_nascimento: profile.date_of_birth,
+            caregiver: profile.caregiver,
+          };
+        }
+      }
+    }
+
     const webhookUrl = process.env.AGENT_WEBHOOK;
     const agentSecret = process.env.AGENT_SECRET;
 
@@ -312,7 +370,7 @@ app.post("/api/agent", async (req, res) => {
         "Content-Type": "application/json",
         ...(agentSecret && { "X-Secret": agentSecret }),
       },
-      body: JSON.stringify({ pergunta, userId }),
+      body: JSON.stringify(webhookPayload),
     });
 
     if (!response.ok) {
@@ -337,13 +395,13 @@ app.use((req, res) => {
 async function startServer() {
   try {
     await pool.query("SELECT NOW()");
-    console.log("✅ Conectado ao Neon PostgreSQL");
+    console.log("Conectado ao Neon PostgreSQL");
     await initializeDatabase();
     app.listen(PORT, () => {
       console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
     });
   } catch (error) {
-    console.error("❌ Erro ao conectar banco de dados:", error.message);
+    console.error("Falha ao iniciar o servidor:", error.message);
     process.exit(1);
   }
 }

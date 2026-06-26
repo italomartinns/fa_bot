@@ -25,7 +25,7 @@
         <section id="profileSection" class="questionnaire-section">
           <form id="profileForm" class="auth-form" autocomplete="off">
             <div class="auth-field">
-              <label>Qual o seu sexo?</label>
+              <label>Gênero</label>
               <div class="option-group">
                 <label>
                   <input type="radio" name="sex" value="Feminino" required />
@@ -43,12 +43,12 @@
             </div>
 
             <div class="auth-field">
-              <label for="profileDateOfBirth">Qual é a sua data de nascimento (DD/MM/YYYY)</label>
+              <label for="profileDateOfBirth">Data de nascimento (DD/MM/YYYY)</label>
               <input id="profileDateOfBirth" name="dateOfBirth" type="text" pattern="\d{2}/\d{2}/\d{4}" placeholder="DD/MM/YYYY" required />
             </div>
 
             <div class="auth-field">
-              <label for="profileMarital">Qual é o seu estado civil?</label>
+              <label for="profileMarital">Estado civil?</label>
               <select id="profileMarital" name="maritalStatus" required>
                 <option value="">Selecione</option>
                 <option value="Casado">Casado</option>
@@ -103,6 +103,7 @@
     </div>
 
     <script src="config.js"></script>
+    <script src="adks_data.js"></script>
     <script src="questionnaire.js"></script>
   </body>
 </html>

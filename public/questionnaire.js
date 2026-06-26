@@ -24,38 +24,7 @@ const STAGE_COPY = {
   }
 };
 
-const ADKS_QUESTIONS = [
-  { id: 1, text: "01. Pessoas com Alzheimer são particularmente propensas à depressão." },
-  { id: 2, text: "02. Está cientificamente comprovado que o exercício mental pode impedir que uma pessoa contraia a Doença de Alzheimer." },
-  { id: 3, text: "03. Após o aparecimento dos sintomas da Doença de Alzheimer, a esperança média de vida é de 6 a 12 anos." },
-  { id: 4, text: "04. Quando uma pessoa com Doença de Alzheimer fica agitada, exames médicos podem revelar outros problemas de saúde como causa dessa agitação." },
-  { id: 5, text: "05. As pessoas com Doença de Alzheimer respondem melhor a instruções simples, dadas uma de cada vez." },
-  { id: 6, text: "06. Quando as pessoas com Doença de Alzheimer começam a ter dificuldades em cuidar de si próprias, os cuidadores devem assumir imediatamente estas responsabilidades." },
-  { id: 7, text: "07. Se uma pessoa com Doença de Alzheimer começa a ficar alerta e agitada durante o dia, uma boa estratégia é tentar certificar-se de que está praticando bastante atividade física durante o dia."},
-  { id: 8, text: "08. Em casos raros, houve pessoas que recuperaram da Doença de Alzheimer." },
-  { id: 9, text: "09. Pessoas cuja doença de Alzheimer ainda não é grave podem se beneficiar da psicoterapia para depressão e ansiedade." },
-  { id: 10, text: "10. Se surgem problemas de memória e pensamentos confusos de forma repentina, tal deve-se provavelmente à Doença de Alzheimer." },
-  { id: 11, text: "11. A maioria das pessoas com Alzheimer vive em lares de idosos." },
-  { id: 12, text: "12. Má nutrição pode piorar os sintomas da doença de Alzheimer." },
-  { id: 13, text: "13. Pessoas na casa dos 30 anos podem desenvolver a doença de Alzheimer." },
-  { id: 14, text: "14. O risco de queda de uma pessoa com Doença de Alzheimer tende a aumentar com o agravamento da doença." },
-  { id: 15, text: "15. Quando as pessoas com Doença de Alzheimer repetem uma pergunta ou história várias vezes, é útil relembrá-las que se estão a repetir." },
-  { id: 16, text: "16. Assim que as pessoas têm Doença de Alzheimer, deixam de ser capazes de tomar decisões informadas sobre os seus próprios cuidados." },
-  { id: 17, text: "17. Eventualmente, a pessoa com doença de Alzheimer precisará de supervisão 24 horas por dia." },
-  { id: 18, text: "18. Ter colesterol elevado pode aumentar o risco de desenvolver Doença de Alzheimer." },
-  { id: 19, text: "19. Tremor ou agitação das mãos ou braços é um sintoma comum em pessoas com Doença de Alzheimer." },
-  { id: 20, text: "20. Sintomas graves de depressão podem ser confundidos com Alzheimer." },
-  { id: 21, text: "21. A doença de Alzheimer é um tipo de demência." },
-  { id: 22, text: "22. Dificuldades em lidar com o dinheiro ou em pagar as contas é um sintoma inicial comum da Doença de Alzheimer." },
-  { id: 23, text: "23. Um sintoma que pode ocorrer com a Doença de Alzheimer é pensar que outras pessoas estão a roubar as nossas coisas." },
-  { id: 24, text: "24. Quando uma pessoa tem doença de Alzheimer, a utilização de lembretes escritos é um apoio que pode contribuir para o seu declínio." },
-  { id: 25, text: "25. Existem medicamentos, disponíveis mediante prescrição médica, que previnem a Doença de Alzheimer." },
-  { id: 26, text: "26. Ter hipertensão arterial pode aumentar o risco de desenvolvimento de Doença de Alzheimer." },
-  { id: 27, text: "27. Os genes contribuem apenas parcialmente para o desenvolvimento da Doença de Alzheimer." },
-  { id: 28, text: "28. É seguro para uma pessoa com Doença de Alzheimer conduzir, desde que tenha sempre um acompanhante no carro." },
-  { id: 29, text: "29. A Doença de Alzheimer é incurável." },
-  { id: 30, text: "30. A maioria das pessoas com Alzheimer recorda mais facilmente acontecimentos recentes do que coisas que aconteceram no passado." }
-];
+
 
 function getCurrentUser() {
   try {
@@ -312,10 +281,45 @@ async function initializeQuestionnaire() {
         return;
       }
 
+      const adksResults = [];
+      const incorrectAnswersDetails = [];
+      let incorrectAnswersSummary = "Respostas incorretas no questionário ADKS:\n";
+
+      answers.forEach((userAnswer) => {
+        const questionId = userAnswer.questionId;
+        const hasTheKnowledge = userAnswer.answer === ADKS_CORRECT_ANSWERS[questionId];
+        adksResults.push({
+          questionId: questionId,
+          answer: userAnswer.answer,
+          hasTheKnowledge: hasTheKnowledge,
+          correctAnswer: ADKS_CORRECT_ANSWERS[questionId],
+        });
+
+        if (!hasTheKnowledge) {
+          const questionText = ADKS_QUESTIONS.find(q => q.id === questionId).text;
+          const explanationText = ADKS_EXPLANATIONS[questionId];
+          incorrectAnswersSummary += `- ${questionText} (Sua resposta: ${userAnswer.answer ? 'Verdadeiro' : 'Falso'}, Correta: ${ADKS_CORRECT_ANSWERS[questionId] ? 'Verdadeiro' : 'Falso'}. Explicação: ${explanationText})\n`;
+          incorrectAnswersDetails.push({
+            questionId: questionId,
+            questionText: questionText,
+            userAnswer: userAnswer.answer,
+            correctAnswer: ADKS_CORRECT_ANSWERS[questionId],
+            explanation: explanationText,
+          });
+        }
+      });
+      
+      // If no incorrect answers, provide a positive message
+      if (incorrectAnswersSummary === "Respostas incorretas no questionário ADKS:\n") {
+        incorrectAnswersSummary = "Parabéns! Você acertou todas as perguntas do questionário ADKS.";
+      }
+
       try {
         await apiPost("/api/adks", {
           userId: user.id,
-          answers,
+          answers: adksResults, // Send detailed results
+          incorrectAnswersSummary: incorrectAnswersSummary, // Send summary for webhook
+          incorrectAnswersDetails: incorrectAnswersDetails, // Send detailed explanations for webhook
         });
         window.location.href = "index.html";
       } catch (error) {
