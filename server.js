@@ -467,12 +467,12 @@ app.post("/api/initial-message", async (req, res) => {
       });
     }
 
-    message += `\n\n💡 **Como podemos ajudar?**\n`;
+    message += `\n💡 **Como podemos ajudar?**\n`;
     message += `Você pode:\n`;
     message += `• Fazer perguntas sobre os tópicos acima\n`;
     message += `• Pedir explicações mais detalhadas\n`;
     message += `• Solicitar dicas\n\n`;
-    message += `Qual tópico você gostaria de explorar agora?`;
+    message += `Qual destes tópicos você gostaria de explorar agora?`;
 
     res.json({ generated_text: message });
   } catch (error) {

@@ -196,7 +196,6 @@ function appendMessage(text, type, timeStr = null) {
   article.appendChild(p);
   article.appendChild(time);
   messages.appendChild(article);
-  messages.scrollTop = messages.scrollHeight;
 }
 
 function renderMessages(conversationId) {
