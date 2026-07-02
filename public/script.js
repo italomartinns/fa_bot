@@ -76,6 +76,36 @@ function saveConversations(conversations) {
   localStorage.setItem(CONVERSATIONS_KEY, JSON.stringify(conversations));
 }
 
+async function appendInitialMessageToConversation(conversationId) {
+  try {
+    const url = window.API_CONFIG.getApiUrl('/api/initial-message');
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: getCurrentUser()?.id }),
+    });
+
+    const data = await resp.json().catch(() => ({}));
+    const initialMessage = data && data.generated_text ? data.generated_text : "";
+
+    if (!initialMessage || currentConversationId !== conversationId) {
+      return;
+    }
+
+    const conversation = conversations.find((c) => c.id === conversationId);
+    if (!conversation) {
+      return;
+    }
+
+    const botMsg = { type: "bot", text: initialMessage };
+    conversation.messages.push(botMsg);
+    saveConversations(conversations);
+    appendMessage(initialMessage, "bot");
+  } catch (err) {
+    console.error("Erro ao buscar mensagem inicial:", err);
+  }
+}
+
 function createNewConversation() {
   const conversations = getConversations();
   const newConversation = {
@@ -86,6 +116,16 @@ function createNewConversation() {
   };
   conversations.push(newConversation);
   saveConversations(conversations);
+  return newConversation;
+}
+
+async function createConversationWithInitialMessage() {
+  const newConversation = createNewConversation();
+  conversations = getConversations();
+  currentConversationId = newConversation.id;
+  updateConversationList();
+  renderConversation(currentConversationId);
+  await appendInitialMessageToConversation(newConversation.id);
   return newConversation;
 }
 
@@ -115,11 +155,7 @@ function deleteConversation(conversationId) {
     updateConversationList();
     renderConversation(currentConversationId);
   } else {
-    const newConversation = createNewConversation();
-    conversations = getConversations();
-    currentConversationId = newConversation.id;
-    updateConversationList();
-    renderConversation(currentConversationId);
+    createConversationWithInitialMessage();
   }
 }
 
@@ -134,12 +170,26 @@ function currentTime() {
   });
 }
 
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function formatMessageContent(text) {
+  const safeText = escapeHtml(String(text));
+  const withBold = safeText.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  return withBold.replace(/\n/g, "<br>");
+}
 
 function appendMessage(text, type, timeStr = null) {
   const article = document.createElement("article");
   article.className = `message ${type}`;
   const p = document.createElement("p");
-  p.innerHTML = text.replace(/\n/g, "<br>");
+  p.innerHTML = formatMessageContent(text);
   const time = document.createElement("time");
   time.textContent = timeStr || currentTime();
 
@@ -218,12 +268,10 @@ function renderConversation(conversationId) {
 function initializeConversations() {
   conversations = getConversations();
   if (conversations.length === 0) {
-    const initialConversation = createNewConversation();
-    conversations = getConversations();
-    currentConversationId = initialConversation.id;
-    return;
+    return createConversationWithInitialMessage();
   }
   currentConversationId = conversations[0].id;
+  return Promise.resolve();
 }
 
 function bindEventHandlers() {
@@ -281,12 +329,8 @@ function bindEventHandlers() {
   }
 
   if (newChatBtn) {
-    newChatBtn.addEventListener("click", () => {
-      const newConversation = createNewConversation();
-      conversations = getConversations();
-      currentConversationId = newConversation.id;
-      updateConversationList();
-      renderConversation(currentConversationId);
+    newChatBtn.addEventListener("click", async () => {
+      await createConversationWithInitialMessage();
     });
   }
 
@@ -298,12 +342,12 @@ function bindEventHandlers() {
   }
 }
 
-function initializeChat(activeUser) {
+async function initializeChat(activeUser) {
   if (currentUserName) {
     currentUserName.textContent = activeUser.name;
   }
 
-  initializeConversations();
+  await initializeConversations();
   bindEventHandlers();
   updateConversationList();
   if (currentConversationId) {
@@ -318,7 +362,7 @@ async function bootstrap() {
   const allowed = await ensureAdksCompleted(activeUser);
   if (!allowed) return;
 
-  initializeChat(activeUser);
+  await initializeChat(activeUser);
 }
 
 bootstrap();

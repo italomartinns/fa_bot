@@ -163,7 +163,6 @@ app.post("/api/profile", async (req, res) => {
     const [day, month, year] = dateOfBirth.split('/').map(Number);
     const dob = new Date(year, month - 1, day);
     
-    // Validate date components to prevent "date overflow" (e.g., Feb 30th becoming March 2nd)
     if (isNaN(dob.getTime()) || dob.getDate() !== day || dob.getMonth() !== month - 1 || dob.getFullYear() !== year) {
       return res.status(400).json({ message: "Data de nascimento inválida." });
     }
@@ -245,7 +244,6 @@ app.post("/api/adks", async (req, res) => {
   }
 });
 
-// POST /api/onboarding-status - Verificar status de onboarding
 app.post("/api/onboarding-status", async (req, res) => {
   try {
     const { userId } = req.body || {};
@@ -360,7 +358,7 @@ if (profileResult.rows.length > 0) {
     const agentSecret = process.env.AGENT_SECRET;
 
     if (!webhookUrl) {
-      console.warn("⚠️ AGENT_WEBHOOK não configurada, usando resposta mock");
+      console.warn("AGENT_WEBHOOK não configurada, usando resposta mock");
       const mockResponse = `Entendi sua pergunta: "${pergunta}". Estou aqui para ajudar com informações sobre o Alzheimer.`;
       return res.json({ generated_text: mockResponse });
     }
@@ -386,6 +384,100 @@ if (profileResult.rows.length > 0) {
   } catch (error) {
     console.error("Erro /api/agent:", error.message);
     res.status(500).json({ message: "Erro ao processar pergunta." });
+  }
+});
+
+app.post("/api/initial-message", async (req, res) => {
+  try {
+    const { userId } = req.body || {};
+    const parsedUserId = Number(userId);
+
+    if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) {
+      return res.status(400).json({ message: "Usuário inválido." });
+    }
+
+    // Buscar nome do usuário
+    const userResult = await pool.query(
+      "SELECT name FROM users WHERE id = $1",
+      [parsedUserId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: "Usuário não encontrado." });
+    }
+
+    const userName = userResult.rows[0].name;
+
+    // Buscar todas as respostas do ADKS
+    const answersResult = await pool.query(
+      "SELECT question_id, answer, has_the_knowledge FROM adks_answers WHERE user_id = $1",
+      [parsedUserId]
+    );
+
+    // Filtrar perguntas erradas e já aprendidas
+    const wrongAnswers = [];
+    const learnedAnswers = [];
+
+    answersResult.rows.forEach(row => {
+      const questionId = row.question_id;
+      const userAnswer = row.answer;
+      const correctAnswer = ADKS_CORRECT_ANSWERS[questionId];
+      const hasTheKnowledge = row.has_the_knowledge;
+      
+      // Se a resposta está errada
+      if (userAnswer !== correctAnswer) {
+        if (hasTheKnowledge) {
+          // Já aprendeu sobre essa pergunta
+          learnedAnswers.push({
+            id: questionId,
+            text: ADKS_QUESTIONS.find(q => q.id === questionId)?.text || `Pergunta ${questionId}`,
+            explanation: ADKS_EXPLANATIONS[questionId] || "Explicação não disponível.",
+            userAnswer
+          });
+        } else {
+          // Ainda não aprendeu
+          wrongAnswers.push({
+            id: questionId,
+            text: ADKS_QUESTIONS.find(q => q.id === questionId)?.text || `Pergunta ${questionId}`,
+            explanation: ADKS_EXPLANATIONS[questionId] || "Explicação não disponível.",
+            userAnswer
+          });
+        }
+      }
+    });
+
+    // Gerar mensagem personalizada
+    let message = `Olá ${userName}! 👋\n`;
+    message += `Vamos revisar seu desempenho?\n\n`;
+
+    if (wrongAnswers.length > 0) {
+      message += `📌 **Algumas questões você respondeu incorretamente no questionário e ainda precisa aprender:**\n`;
+      wrongAnswers.forEach((q, idx) => {
+        const userAnswerLabel = q.userAnswer ? "Verdadeiro" : "Falso";
+        message += `\n${idx + 1}. ${q.text}\n`;
+        message += `   Você respondeu: ${userAnswerLabel} ❌\n`;
+        message += `   Resposta correta: ${q.explanation}\n`;
+      });
+    }
+
+    if (learnedAnswers.length > 0) {
+      message += `\n\n✅ **Questões que você já está aprendendo:**\n`;
+      learnedAnswers.forEach((q, idx) => {
+        message += `${idx + 1}. ${q.text.substring(0, 50)}...\n`;
+      });
+    }
+
+    message += `\n\n💡 **Como podemos ajudar?**\n`;
+    message += `Você pode:\n`;
+    message += `• Fazer perguntas sobre os tópicos acima\n`;
+    message += `• Pedir explicações mais detalhadas\n`;
+    message += `• Solicitar dicas\n\n`;
+    message += `Qual tópico você gostaria de explorar agora?`;
+
+    res.json({ generated_text: message });
+  } catch (error) {
+    console.error("Erro /api/initial-message:", error);
+    res.status(500).json({ message: "Erro ao gerar mensagem inicial." });
   }
 });
 
