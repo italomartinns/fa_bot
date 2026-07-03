@@ -69,6 +69,34 @@ async function initializeDatabase() {
       );
     `);
 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS chat_conversations (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        conversation_key BIGINT NOT NULL,
+        title TEXT NOT NULL,
+        subtitle TEXT NOT NULL DEFAULT '',
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, conversation_key),
+        FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS chat_messages (
+        id SERIAL PRIMARY KEY,
+        conversation_id INTEGER NOT NULL,
+        message_order INTEGER NOT NULL,
+        message_type TEXT NOT NULL,
+        message_text TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(conversation_id, message_order),
+        FOREIGN KEY(conversation_id) REFERENCES chat_conversations(id) ON DELETE CASCADE
+      );
+    `);
+
     console.log("✅ Banco de dados inicializado");
   } catch (error) {
     console.error("❌ Erro ao inicializar banco:", error.message);
@@ -275,6 +303,166 @@ app.post("/api/onboarding-status", async (req, res) => {
   }
 });
 
+app.get("/api/chat-history", async (req, res) => {
+  try {
+    const parsedUserId = Number(req.query.userId);
+
+    if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) {
+      return res.status(400).json({ message: "Usuário inválido." });
+    }
+
+    const conversationsResult = await pool.query(
+      `SELECT id, conversation_key, title, subtitle, sort_order
+       FROM chat_conversations
+       WHERE user_id = $1
+       ORDER BY sort_order ASC, id ASC`,
+      [parsedUserId]
+    );
+
+    if (conversationsResult.rows.length === 0) {
+      return res.json({ conversations: [] });
+    }
+
+    const messagesResult = await pool.query(
+      `SELECT c.conversation_key, m.message_order, m.message_type, m.message_text
+       FROM chat_conversations c
+       LEFT JOIN chat_messages m ON m.conversation_id = c.id
+       WHERE c.user_id = $1
+       ORDER BY c.sort_order ASC, c.id ASC, m.message_order ASC, m.id ASC`,
+      [parsedUserId]
+    );
+
+    const conversationMap = new Map();
+
+    for (const row of conversationsResult.rows) {
+      const conversationKey = Number(row.conversation_key);
+      conversationMap.set(conversationKey, {
+        id: conversationKey,
+        title: row.title,
+        subtitle: row.subtitle || "",
+        messages: [],
+      });
+    }
+
+    for (const row of messagesResult.rows) {
+      const conversationKey = Number(row.conversation_key);
+      const conversation = conversationMap.get(conversationKey);
+      if (!conversation || row.message_text === null || row.message_text === undefined) {
+        continue;
+      }
+
+      conversation.messages.push({
+        type: row.message_type,
+        text: row.message_text,
+      });
+    }
+
+    res.json({
+      conversations: Array.from(conversationMap.values()),
+    });
+  } catch (error) {
+    console.error("Erro /api/chat-history:", error);
+    res.status(500).json({ message: "Erro ao buscar histórico." });
+  }
+});
+
+app.post("/api/chat-history", async (req, res) => {
+  try {
+    const { userId, conversations } = req.body || {};
+    const parsedUserId = Number(userId);
+
+    if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) {
+      return res.status(400).json({ message: "Usuário inválido." });
+    }
+
+    if (!Array.isArray(conversations)) {
+      return res.status(400).json({ message: "Histórico inválido." });
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+
+      const uniqueConversationKeys = Array.from(
+        new Set(
+          conversations
+            .map((conversation) => Number(conversation?.id))
+            .filter((conversationKey) => Number.isInteger(conversationKey) && conversationKey > 0)
+        )
+      );
+
+      if (uniqueConversationKeys.length === 0) {
+        await client.query("DELETE FROM chat_conversations WHERE user_id = $1", [parsedUserId]);
+        await client.query("COMMIT");
+        return res.json({ ok: true });
+      }
+
+      await client.query(
+        `DELETE FROM chat_conversations
+         WHERE user_id = $1
+         AND NOT (conversation_key = ANY($2::bigint[]))`,
+        [parsedUserId, uniqueConversationKeys]
+      );
+
+      for (let conversationIndex = 0; conversationIndex < conversations.length; conversationIndex += 1) {
+        const conversation = conversations[conversationIndex] || {};
+        const conversationKey = Number(conversation.id);
+
+        if (!Number.isInteger(conversationKey) || conversationKey <= 0) {
+          continue;
+        }
+
+        const title = typeof conversation.title === "string" && conversation.title.trim()
+          ? conversation.title.trim()
+          : `Chat ${conversationIndex + 1}`;
+        const subtitle = typeof conversation.subtitle === "string" ? conversation.subtitle : "";
+
+        const insertedConversation = await client.query(
+          `INSERT INTO chat_conversations (user_id, conversation_key, title, subtitle, sort_order, updated_at)
+           VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+           ON CONFLICT (user_id, conversation_key) DO UPDATE SET
+           title = EXCLUDED.title,
+           subtitle = EXCLUDED.subtitle,
+           sort_order = EXCLUDED.sort_order,
+           updated_at = CURRENT_TIMESTAMP
+           RETURNING id`,
+          [parsedUserId, conversationKey, title, subtitle, conversationIndex]
+        );
+
+        const conversationDbId = insertedConversation.rows[0].id;
+        await client.query("DELETE FROM chat_messages WHERE conversation_id = $1", [conversationDbId]);
+
+        const messages = Array.isArray(conversation.messages) ? conversation.messages : [];
+        for (let messageIndex = 0; messageIndex < messages.length; messageIndex += 1) {
+          const message = messages[messageIndex] || {};
+          if (typeof message.text !== "string") {
+            continue;
+          }
+
+          const messageType = message.type === "user" ? "user" : "bot";
+          await client.query(
+            `INSERT INTO chat_messages (conversation_id, message_order, message_type, message_text)
+             VALUES ($1, $2, $3, $4)`,
+            [conversationDbId, messageIndex, messageType, message.text]
+          );
+        }
+      }
+
+      await client.query("COMMIT");
+    } catch (transactionError) {
+      await client.query("ROLLBACK");
+      throw transactionError;
+    } finally {
+      client.release();
+    }
+
+    res.json({ ok: true });
+  } catch (error) {
+    console.error("Erro /api/chat-history:", error);
+    res.status(500).json({ message: "Erro ao salvar histórico." });
+  }
+});
+
 
 app.post("/api/verify-user", async (req, res) => {
   try {
@@ -378,7 +566,7 @@ if (profileResult.rows.length > 0) {
     }
 
     const data = await response.json();
-    const generatedText = data.generated_text || "Sem resposta do agente.";
+    const generatedText = data.generated_text || "Sem resposta do agente. Tente novamente.";
 
     res.json({ generated_text: generatedText });
   } catch (error) {

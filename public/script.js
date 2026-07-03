@@ -12,7 +12,6 @@ const sidebarBackdrop = document.getElementById("sidebarBackdrop");
 
 const USERS_KEY = "fa_users";
 const CURRENT_USER_KEY = "fa_current_user";
-const CONVERSATIONS_KEY = "fa_conversations";
 
 function getCurrentUser() {
   try {
@@ -68,16 +67,37 @@ async function ensureAdksCompleted(user) {
 }
 
 function getConversations() {
-  try {
-    const raw = localStorage.getItem(CONVERSATIONS_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch (error) {
-    return [];
-  }
+  return conversations;
 }
 
-function saveConversations(conversations) {
-  localStorage.setItem(CONVERSATIONS_KEY, JSON.stringify(conversations));
+async function loadConversationsFromServer() {
+  const user = getCurrentUser();
+  if (!user?.id) {
+    return [];
+  }
+
+  const url = window.API_CONFIG.getApiUrl(`/api/chat-history?userId=${encodeURIComponent(user.id)}`);
+  const response = await fetch(url);
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const message = data && data.message ? data.message : "Erro inesperado.";
+    throw new Error(message);
+  }
+
+  return Array.isArray(data.conversations) ? data.conversations : [];
+}
+
+async function saveConversations(conversationsToSave) {
+  const user = getCurrentUser();
+  if (!user?.id) {
+    return;
+  }
+
+  await apiPost("/api/chat-history", {
+    userId: user.id,
+    conversations: conversationsToSave,
+  });
 }
 
 async function appendInitialMessageToConversation(conversationId) {
@@ -103,28 +123,28 @@ async function appendInitialMessageToConversation(conversationId) {
 
     const botMsg = { type: "bot", text: initialMessage };
     conversation.messages.push(botMsg);
-    saveConversations(conversations);
+    await saveConversations(conversations);
     appendMessage(initialMessage, "bot");
   } catch (err) {
     console.error("Erro ao buscar mensagem inicial:", err);
   }
 }
 
-function createNewConversation() {
-  const conversations = getConversations();
+async function createNewConversation() {
+  const conversationsList = getConversations();
   const newConversation = {
     id: Date.now(),
-    title: `Chat ${conversations.length + 1}`,
+    title: `Chat ${conversationsList.length + 1}`,
     subtitle: "",
-    messages: []
+    messages: [],
   };
-  conversations.push(newConversation);
-  saveConversations(conversations);
+  conversationsList.push(newConversation);
+  await saveConversations(conversationsList);
   return newConversation;
 }
 
 async function createConversationWithInitialMessage() {
-  const newConversation = createNewConversation();
+  const newConversation = await createNewConversation();
   conversations = getConversations();
   currentConversationId = newConversation.id;
   updateConversationList();
@@ -133,34 +153,35 @@ async function createConversationWithInitialMessage() {
   return newConversation;
 }
 
-function renameConversationToFirstMessage(conversationId) {
+async function renameConversationToFirstMessage(conversationId) {
   const conversation = conversations.find((c) => c.id === conversationId);
   if (!conversation) return;
-  
+
   const firstUserMessage = conversation.messages.find((msg) => msg.type === "user");
-  if (firstUserMessage) {
-    const truncated = firstUserMessage.text.substring(0, 30);
-    conversation.title = truncated.length < firstUserMessage.text.length 
-      ? truncated + "..." 
-      : truncated;
-    saveConversations(conversations);
-  }
+  if (!firstUserMessage) return;
+
+  const truncated = firstUserMessage.text.substring(0, 30);
+  conversation.title = truncated.length < firstUserMessage.text.length
+    ? `${truncated}...`
+    : truncated;
+  await saveConversations(conversations);
 }
 
-function deleteConversation(conversationId) {
+async function deleteConversation(conversationId) {
   conversations = conversations.filter((c) => c.id !== conversationId);
-  saveConversations(conversations);
-  
+  await saveConversations(conversations);
+
   if (currentConversationId === conversationId) {
     currentConversationId = conversations.length > 0 ? conversations[0].id : null;
   }
-  
+
   if (currentConversationId) {
     updateConversationList();
     renderConversation(currentConversationId);
-  } else {
-    createConversationWithInitialMessage();
+    return;
   }
+
+  return createConversationWithInitialMessage();
 }
 
 let conversations = [];
@@ -267,9 +288,9 @@ function updateConversationList() {
     deleteBtn.type = "button";
     deleteBtn.textContent = "✕";
     deleteBtn.title = "Deletar conversa";
-    deleteBtn.addEventListener("click", (e) => {
+    deleteBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
-      deleteConversation(conv.id);
+      await deleteConversation(conv.id);
     });
     
     btn.appendChild(deleteBtn);
@@ -286,8 +307,8 @@ function renderConversation(conversationId) {
   renderMessages(conversationId);
 }
 
-function initializeConversations() {
-  conversations = getConversations();
+async function initializeConversations() {
+  conversations = await loadConversationsFromServer();
   if (conversations.length === 0) {
     return createConversationWithInitialMessage();
   }
@@ -312,7 +333,7 @@ function bindEventHandlers() {
       conversation.messages.push(userMessage);
 
       if (conversation.messages.length === 1) {
-        renameConversationToFirstMessage(currentConversationId);
+        await renameConversationToFirstMessage(currentConversationId);
         updateConversationList();
       }
 
@@ -323,7 +344,7 @@ function bindEventHandlers() {
       const placeholder = { type: "bot", text: "..." };
       conversation.messages.push(placeholder);
       appendMessage(placeholder.text, "bot");
-      saveConversations(conversations);
+      await saveConversations(conversations);
 
       try {
         const url = window.API_CONFIG.getApiUrl('/api/agent');
@@ -338,12 +359,12 @@ function bindEventHandlers() {
 
         const lastIdx = conversation.messages.length - 1;
         conversation.messages[lastIdx].text = generated || "Sem resposta do agente.";
-        saveConversations(conversations);
+        await saveConversations(conversations);
         renderMessages(currentConversationId);
       } catch (err) {
         const lastIdx = conversation.messages.length - 1;
         conversation.messages[lastIdx].text = "Erro ao consultar o agente.";
-        saveConversations(conversations);
+        await saveConversations(conversations);
         renderMessages(currentConversationId);
       }
     });
