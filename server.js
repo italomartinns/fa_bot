@@ -451,19 +451,19 @@ app.post("/api/initial-message", async (req, res) => {
     message += `Vamos revisar seu desempenho?\n\n`;
 
     if (wrongAnswers.length > 0) {
-      message += `📌 **Algumas questões você respondeu incorretamente no questionário e ainda precisa aprender:**\n`;
+      message += `**Algumas questões você respondeu incorretamente no questionário e ainda precisa aprender:**\n`;
       wrongAnswers.forEach((q, idx) => {
         const userAnswerLabel = q.userAnswer ? "Verdadeiro" : "Falso";
-        message += `\n${idx + 1}. ${q.text}\n`;
-        message += `   Você respondeu: ${userAnswerLabel} ❌\n`;
-        message += `   Resposta correta: ${q.explanation}\n`;
+        message += `\n**${q.text}** 🤔\n`;
+        message += `❌ Você respondeu: ${userAnswerLabel}\n`;
+        message += `✅ Resposta correta: ${q.explanation}\n`;
       });
     }
 
     if (learnedAnswers.length > 0) {
       message += `\n\n✅ **Questões que você já está aprendendo:**\n`;
       learnedAnswers.forEach((q, idx) => {
-        message += `${idx + 1}. ${q.text.substring(0, 50)}...\n`;
+        message += `\n**${q.text}**\n`;
       });
     }
 

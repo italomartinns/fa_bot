@@ -5,6 +5,10 @@ const logoutBtn = document.getElementById("logoutBtn");
 const currentUserName = document.getElementById("currentUserName");
 const newChatBtn = document.querySelector(".new-chat-btn");
 const conversationList = document.getElementById("conversationList");
+const menuBtn = document.getElementById("menuBtn");
+const closeSidebarBtn = document.getElementById("closeSidebarBtn");
+const sidebarPanel = document.getElementById("sidebarPanel");
+const sidebarBackdrop = document.getElementById("sidebarBackdrop");
 
 const USERS_KEY = "fa_users";
 const CURRENT_USER_KEY = "fa_current_user";
@@ -162,6 +166,23 @@ function deleteConversation(conversationId) {
 let conversations = [];
 let currentConversationId = null;
 
+function isMobileLayout() {
+  return window.matchMedia("(max-width: 900px)").matches;
+}
+
+function setSidebarOpen(isOpen) {
+  document.body.classList.toggle("sidebar-open", isOpen);
+  if (menuBtn) {
+    menuBtn.setAttribute("aria-expanded", String(isOpen));
+  }
+}
+
+function closeSidebarOnMobile() {
+  if (isMobileLayout()) {
+    setSidebarOpen(false);
+  }
+}
+
 function currentTime() {
   const now = new Date();
   return now.toLocaleTimeString("pt-BR", {
@@ -238,6 +259,7 @@ function updateConversationList() {
       currentConversationId = conv.id;
       updateConversationList();
       renderMessages(currentConversationId);
+      closeSidebarOnMobile();
     });
     
     const deleteBtn = document.createElement("button");
@@ -330,6 +352,7 @@ function bindEventHandlers() {
   if (newChatBtn) {
     newChatBtn.addEventListener("click", async () => {
       await createConversationWithInitialMessage();
+      closeSidebarOnMobile();
     });
   }
 
@@ -339,6 +362,26 @@ function bindEventHandlers() {
       window.location.href = "login.html";
     });
   }
+
+  if (menuBtn) {
+    menuBtn.addEventListener("click", () => {
+      setSidebarOpen(!document.body.classList.contains("sidebar-open"));
+    });
+  }
+
+  if (closeSidebarBtn) {
+    closeSidebarBtn.addEventListener("click", () => setSidebarOpen(false));
+  }
+
+  if (sidebarBackdrop) {
+    sidebarBackdrop.addEventListener("click", () => setSidebarOpen(false));
+  }
+
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      setSidebarOpen(false);
+    }
+  });
 }
 
 async function initializeChat(activeUser) {

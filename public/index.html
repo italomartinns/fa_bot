@@ -4,8 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Forcare Alzheimer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="style.css" />
-    <link rel="icon" type="image/svg+xml" href="icon.svg" sizes="any" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" sizes="any" />
     <link rel="shortcut icon" href="/favicon.ico" />
   </head>
   <body>
@@ -13,31 +19,52 @@
     <div class="ambient-shape shape-2"></div>
 
     <main class="app-shell">
-      <aside class="chat-list-panel">
+      <aside class="chat-list-panel" id="sidebarPanel" aria-label="Lista de conversas">
         <div class="panel-header">
-          <p class="eyebrow">Atendimento</p>
+          <div class="panel-header-row">
+            <p class="eyebrow">Atendimento</p>
+            <button class="sidebar-close-btn" id="closeSidebarBtn" type="button" aria-label="Fechar menu">
+              <span class="material-symbols-outlined" aria-hidden="true">close</span>
+            </button>
+          </div>
           <h1>Forcare Alzheimer</h1>
           <button class="new-chat-btn" type="button">Nova conversa</button>
         </div>
 
         <nav class="conversation-list" aria-label="Lista de conversas" id="conversationList">
         </nav>
+
+        <div class="chat-list-footer">
+          <button class="logout-btn logout-btn-sidebar" id="logoutBtn" type="button">Sair</button>
+        </div>
       </aside>
 
       <section class="chat-panel" aria-label="Janela de conversa">
         <header class="chat-header">
-          <div>
+          <div class="chat-header-main">
+            <button
+              class="menu-toggle"
+              id="menuBtn"
+              type="button"
+              aria-label="Abrir menu"
+              aria-controls="sidebarPanel"
+              aria-expanded="false"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">menu</span>
+            </button>
+
+            <div class="chat-title-group">
             <p class="eyebrow">Conversa ativa</p>
             <h2><span id="chatTitle"></span></h2>
             <p class="chat-user">Logado como <strong id="currentUserName"></strong></p>
+            </div>
           </div>
           <div class="chat-actions">
             <span class="status-pill">Conectado</span>
-            <button class="logout-btn" id="logoutBtn" type="button">Sair</button>
           </div>
         </header>
 
-      <div class="messages" id="messages" aria-live="polite"></div>
+        <div class="messages" id="messages" aria-live="polite"></div>
 
         <form class="composer" id="composer" autocomplete="off">
           <label class="sr-only" for="messageInput">Digite sua mensagem</label>
@@ -51,6 +78,8 @@
           <button type="submit">Enviar</button>
         </form>
       </section>
+
+      <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
     </main>
 
     <script src="config.js"></script>
