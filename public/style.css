@@ -646,6 +646,9 @@ h2 {
     margin: 12px;
     overflow: hidden;
     isolation: isolate;
+    border: none;
+    border-radius: 0;
+    margin: 0;
   }
 
   .chat-list-panel {
@@ -660,7 +663,6 @@ h2 {
     transform: translateX(-105%);
     transition: transform 220ms ease;
     z-index: 2;
-    box-shadow: 24px 0 48px rgba(5, 8, 12, 0.45);
     pointer-events: auto;
     overflow: auto;
   }
