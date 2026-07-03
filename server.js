@@ -481,6 +481,11 @@ app.post("/api/initial-message", async (req, res) => {
   }
 });
 
+// apagar depois que colocar um ico real pra compartibilidade com browsers antigos
+app.get("/favicon.ico", (req, res) => {
+  res.redirect(302, "images/icon.svg");
+});
+
 app.use((req, res) => {
   res.status(404).json({ message: "Rota não encontrada." });
 });
