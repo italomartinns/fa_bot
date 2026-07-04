@@ -1,7 +1,7 @@
 const ADKS_QUESTIONS = [
   { id: 1, text: "Pessoas com Alzheimer são particularmente propensas à depressão." },
-  { id: 2, text: "Está cientificamente comprovado que o exercício mental pode impedir que uma pessoa contraia a Doença de Alzheimer." },
-  { id: 3, text: "Após o aparecimento dos sintomas da Doença de Alzheimer, a esperança média de vida é de 6 a 12 anos." },
+  { id: 2, text: "A estimulação cognitiva regular pode contribuir para reduzir o risco de demência, mas não impede totalmente o desenvolvimento da Doença de Alzheimer." },
+  { id: 3, text: "A sobrevida após o início dos sintomas da Doença de Alzheimer varia amplamente entre indivíduos." },
   { id: 4, text: "Quando uma pessoa com Doença de Alzheimer fica agitada, exames médicos podem revelar outros problemas de saúde como causa dessa agitação." },
   { id: 5, text: "As pessoas com Doença de Alzheimer respondem melhor a instruções simples, dadas uma de cada vez." },
   { id: 6, text: "Quando as pessoas com Doença de Alzheimer começam a ter dificuldades em cuidar de si próprias, os cuidadores devem assumir imediatamente estas responsabilidades." },
@@ -66,8 +66,8 @@ const ADKS_CORRECT_ANSWERS = {
 
 const ADKS_EXPLANATIONS = {
   1: "A depressão é comum em pessoas com Alzheimer e deve ser monitorada.",
-  2: "A estimulação cognitiva regular pode contribuir para reduzir o risco de demência, mas não impede totalmente o desenvolvimento da Doença de Alzheimer.",
-  3: "A sobrevida após o início dos sintomas da Doença de Alzheimer varia amplamente entre indivíduos.",
+  2: "Exercícios mentais ajudam a estimular o cérebro, mas não previnem a doença.",
+  3: "Isso é verdadeiro. A progressão varia, mas a média é de 6 a 12 anos.",
   4: "A agitação pode estar ligada a dor, infecção ou outros problemas.",
   5: "Isso ajuda a reduzir confusão e facilita a compreensão.",
   6: "Nem sempre. O ideal é apoiar gradualmente, preservando a autonomia.",
