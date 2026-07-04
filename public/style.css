@@ -30,7 +30,7 @@ body {
   margin: 0;
   color: var(--text);
   font-family: 'Poppins', sans-serif;
-  background: radial-gradient(circle at top, #262626 0%, #121212 52%, #000000 100%);
+  background: radial-gradient(circle at top, #001d02e7 0%, #000f07 52%, #000000 100%);
   overflow: hidden;
 }
 
