@@ -451,7 +451,7 @@ h2 {
   color: var(--muted);
 }
 
-.auth-field input {
+.auth-field input:not([type="radio"]):not([type="checkbox"]) {
   width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
@@ -471,7 +471,17 @@ h2 {
   background: rgba(25, 25, 25, 0.95);
 }
 
-.auth-field input:focus {
+.option-group input,
+.adks-options input {
+  width: auto;
+  display: inline-block;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.auth-field input:not([type="radio"]):not([type="checkbox"]):focus {
   outline: 2px solid rgba(74, 222, 128, 0.24);
   border-color: rgba(74, 222, 128, 0.5);
 }
