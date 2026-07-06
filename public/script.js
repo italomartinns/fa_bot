@@ -340,7 +340,7 @@ function bindEventHandlers() {
       appendMessage(value, "user");
       input.value = "";
 
-      // adiciona placeholder de resposta enquanto aguarda o agente
+      // mensagem placeholder de aguardo -- substituir por animação no futuro
       const placeholder = { type: "bot", text: "..." };
       conversation.messages.push(placeholder);
       appendMessage(placeholder.text, "bot");

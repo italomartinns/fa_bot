@@ -309,7 +309,6 @@ async function initializeQuestionnaire() {
         }
       });
       
-      // If no incorrect answers, provide a positive message
       if (incorrectAnswersSummary === "Respostas incorretas no questionário ADKS:\n") {
         incorrectAnswersSummary = "Parabéns! Você acertou todas as perguntas do questionário ADKS.";
       }
@@ -317,9 +316,9 @@ async function initializeQuestionnaire() {
       try {
         await apiPost("/api/adks", {
           userId: user.id,
-          answers: adksResults, // Send detailed results
-          incorrectAnswersSummary: incorrectAnswersSummary, // Send summary for webhook
-          incorrectAnswersDetails: incorrectAnswersDetails, // Send detailed explanations for webhook
+          answers: adksResults,
+          incorrectAnswersSummary: incorrectAnswersSummary,
+          incorrectAnswersDetails: incorrectAnswersDetails,
         });
         window.location.href = "index.html";
       } catch (error) {
