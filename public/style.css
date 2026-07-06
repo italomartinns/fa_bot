@@ -452,6 +452,7 @@ h2 {
 }
 
 .auth-field input {
+  width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   padding: 12px 14px;
@@ -461,6 +462,7 @@ h2 {
 }
 
 .auth-field select {
+  width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   padding: 12px 14px;
