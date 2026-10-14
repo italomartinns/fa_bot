@@ -266,6 +266,9 @@ function renderMessages(conversationId) {
 }
 
 function updateConversationList() {
+  document.querySelectorAll(".conversation-menu").forEach((menu) => {
+    menu.remove();
+  });
   conversationList.innerHTML = "";
   conversations.forEach((conv) => {
     const item = document.createElement("div");
@@ -341,6 +344,7 @@ function updateConversationList() {
 
     menu.appendChild(renameBtn);
     menu.appendChild(deleteBtn);
+    document.body.appendChild(menu);
     menuBtn.addEventListener("click", (event) => {
       event.stopPropagation();
       const isOpen = !menu.hidden;
@@ -356,9 +360,13 @@ function updateConversationList() {
       if (!isOpen) {
         const buttonRect = menuBtn.getBoundingClientRect();
         menu.style.top = `${buttonRect.bottom + 6}px`;
-        menu.style.left = `${Math.max(8, buttonRect.right - 120)}px`;
+        menu.style.left = "0px";
 
         const menuRect = menu.getBoundingClientRect();
+        const maxLeft = window.innerWidth - menuRect.width - 8;
+        const anchoredLeft = buttonRect.right - menuRect.width;
+        menu.style.left = `${Math.min(Math.max(8, anchoredLeft), maxLeft)}px`;
+
         if (menuRect.bottom > window.innerHeight - 8) {
           menu.style.top = `${buttonRect.top - menuRect.height - 6}px`;
         }
@@ -366,7 +374,6 @@ function updateConversationList() {
     });
 
     actions.appendChild(menuBtn);
-    actions.appendChild(menu);
     item.appendChild(selectBtn);
     item.appendChild(actions);
     conversationList.appendChild(item);
@@ -550,7 +557,7 @@ function bindEventHandlers() {
   }
 
   document.addEventListener("click", (event) => {
-    if (!event.target.closest(".conversation-actions")) {
+    if (!event.target.closest(".conversation-actions, .conversation-menu")) {
       closeConversationMenus();
     }
   });
