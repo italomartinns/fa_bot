@@ -104,10 +104,22 @@ h2 {
   transition: border-color 180ms ease, transform 180ms ease, background-color 180ms ease;
 }
 
+.sidebar-close-btn {
+  display: none;
+  color: #fff;
+  background: #dc2626;
+  border-color: #ef4444;
+}
+
 .sidebar-close-btn:hover,
 .menu-toggle:hover {
   border-color: var(--accent);
   background: rgba(42, 42, 42, 0.92);
+}
+
+.sidebar-close-btn:hover {
+  border-color: #f87171;
+  background: #b91c1c;
 }
 
 .chat-list-footer {
@@ -118,6 +130,19 @@ h2 {
 .panel-header {
   display: grid;
   gap: 8px;
+}
+
+.project-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  justify-self: start;
+}
+
+.inner-pannel {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
 }
 
 .eyebrow {
@@ -166,6 +191,87 @@ h2 {
   position: relative;
 }
 
+.conversation-select {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.conversation-rename-input {
+  min-width: 0;
+  flex: 1 1 100%;
+  width: 100%;
+  border: 1px solid rgba(74, 222, 128, 0.6);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--text);
+  background: rgba(15, 15, 15, 0.8);
+  font: inherit;
+}
+
+.conversation-rename-input:focus {
+  outline: 2px solid rgba(74, 222, 128, 0.24);
+}
+
+.conversation-rename-save,
+.conversation-rename-cancel {
+  border: 0;
+  border-radius: 7px;
+  padding: 7px 8px;
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+  margin-left: 3px;
+}
+
+.conversation-item-editing {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.conversation-item-editing .conversation-select {
+  flex: 0 0 auto;
+}
+
+.conversation-item-editing .conversation-select .meta[hidden] {
+  display: none;
+}
+
+.conversation-item-editing .conversation-rename-input {
+  flex: 1 1 0;
+  width: auto;
+}
+
+.conversation-edit-actions {
+  width: 100%;
+  justify-content: flex-end;
+  align-self: auto;
+}
+
+.conversation-rename-save {
+  color: #fff;
+  background: var(--accent-strong);
+  transition: background-color 180ms ease;
+}
+
+.conversation-rename-save:hover {
+  background: #16a34a;
+}
+
+.conversation-rename-cancel {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.12);
+}
+
 .conversation-item:hover {
   border-color: rgba(74, 222, 128, 0.6);
 }
@@ -175,34 +281,58 @@ h2 {
   box-shadow: 0 10px 24px rgba(34, 197, 94, 0.16);
 }
 
-.delete-conversation-btn {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255, 59, 48, 0.2);
-  border: 1px solid rgba(255, 59, 48, 0.4);
-  color: #ff3b30;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.conversation-actions {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.conversation-menu-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--muted);
+  background: transparent;
   cursor: pointer;
-  font-weight: bold;
-  font-size: 0.9rem;
-  opacity: 0;
-  transition: opacity 180ms ease, background-color 180ms ease, border-color 180ms ease;
 }
 
-.conversation-item:hover .delete-conversation-btn {
-  opacity: 1;
+.conversation-menu-btn:hover,
+.conversation-menu-btn:focus-visible {
+  color: var(--text);
 }
 
-.delete-conversation-btn:hover {
-  background: rgba(255, 59, 48, 0.4);
-  border-color: rgba(255, 59, 48, 0.7);
+.conversation-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  min-width: 120px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background: #242424;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+.conversation-menu button {
+  width: 100%;
+  border: 0;
+  border-radius: 7px;
+  padding: 8px 10px;
+  color: var(--text);
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.conversation-menu button:hover,
+.conversation-menu button:focus-visible {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.conversation-menu button:last-child {
+  color: #f87171;
 }
 
 .avatar {
@@ -689,6 +819,22 @@ h2 {
 
   .sidebar-close-btn {
     display: inline-flex;
+    position: fixed;
+    top: 20px;
+    right: 16px;
+    z-index: 3;
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transform: translateX(105%);
+    transition: transform 220ms ease, opacity 220ms ease, visibility 220ms ease;
+  }
+
+  body.sidebar-open .sidebar-close-btn {
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+    transform: translateX(0);
   }
 
   .chat-actions {

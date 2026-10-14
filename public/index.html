@@ -21,13 +21,21 @@
     <main class="app-shell">
       <aside class="chat-list-panel" id="sidebarPanel" aria-label="Lista de conversas">
         <div class="panel-header">
-          <div class="panel-header-row">
-            <p class="eyebrow">Atendimento</p>
-            <button class="sidebar-close-btn" id="closeSidebarBtn" type="button" aria-label="Fechar menu">
-              <span class="material-symbols-outlined" aria-hidden="true">close</span>
-            </button>
+          <p class="eyebrow">Atendimento</p>
+
+          <div class="inner-pannel">
+
+            <div class="inner-pannel-left">
+              <div class="panel-header-row">
+                <h1>Forcare Alzheimer</h1>
+              </div>
+            </div>
+
+            <div class="inner-pannel-right">
+              <img class="project-logo" src="icon.svg" alt="Logo Forcare Alzheimer"/>
+            </div>
           </div>
-          <h1>Forcare Alzheimer</h1>
+
           <button class="new-chat-btn" type="button">Nova conversa</button>
         </div>
 
@@ -38,6 +46,10 @@
           <button class="logout-btn logout-btn-sidebar" id="logoutBtn" type="button">Sair</button>
         </div>
       </aside>
+
+      <button class="sidebar-close-btn" id="closeSidebarBtn" type="button" aria-label="Fechar menu">
+        <span class="material-symbols-outlined" aria-hidden="true">close</span>
+      </button>
 
       <section class="chat-panel" aria-label="Janela de conversa">
         <header class="chat-header">
