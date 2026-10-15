@@ -115,6 +115,9 @@ function createAdksOption(questionId, value, labelText) {
   input.type = "radio";
   input.name = `adks_${questionId}`;
   input.value = value;
+  input.addEventListener("change", () => {
+    input.closest(".adks-item")?.classList.remove("unanswered");
+  });
 
   label.appendChild(input);
   label.appendChild(document.createTextNode(labelText));
@@ -127,6 +130,7 @@ function buildAdksQuestions() {
   ADKS_QUESTIONS.forEach((question) => {
     const item = document.createElement("div");
     item.className = "adks-item";
+    item.dataset.questionId = question.id;
 
     const text = document.createElement("p");
     text.textContent = question.text;
@@ -265,6 +269,8 @@ async function initializeQuestionnaire() {
 
       const answers = ADKS_QUESTIONS.map((question) => {
         const selected = document.querySelector(`input[name="adks_${question.id}"]:checked`);
+        const questionItem = adksQuestions.querySelector(`[data-question-id="${question.id}"]`);
+        questionItem?.classList.toggle("unanswered", !selected);
         if (!selected) {
           return null;
         }
@@ -276,6 +282,10 @@ async function initializeQuestionnaire() {
 
       if (answers.some((answer) => !answer)) {
         showError("Responda todas as perguntas do questionario ADKS.");
+        adksQuestions.querySelector(".unanswered")?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
         return;
       }
 

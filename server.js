@@ -30,6 +30,10 @@ function securityHeaders(req, res, next) {
 
 app.use(securityHeaders);
 
+app.get("/vendor/markdown-it.min.js", (req, res) => {
+  res.sendFile(require.resolve("markdown-it/browser"));
+});
+
 async function initializeDatabase() {
   try {
     await pool.query(`
