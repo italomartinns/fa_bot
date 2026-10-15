@@ -112,6 +112,10 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
+app.get("/questionnaire.html", (req, res) => {
+  res.redirect(308, "/questionnaire/questionnaire.html");
+});
+
 app.post("/api/register", async (req, res) => {
   try {
     const { name, username, password } = req.body || {};

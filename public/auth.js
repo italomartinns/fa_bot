@@ -114,7 +114,7 @@ if (registerForm) {
         password,
       });
       setCurrentUser(user);
-      window.location.href = "questionnaire.html";
+      window.location.href = "/questionnaire/questionnaire.html";
     } catch (error) {
       showError(error.message || "Erro ao cadastrar.");
     }

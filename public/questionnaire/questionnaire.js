@@ -24,8 +24,6 @@ const STAGE_COPY = {
   }
 };
 
-
-
 function getCurrentUser() {
   try {
     const raw = localStorage.getItem(CURRENT_USER_KEY);
@@ -37,7 +35,7 @@ function getCurrentUser() {
 
 function logout() {
   localStorage.removeItem(CURRENT_USER_KEY);
-  window.location.href = "login.html";
+  window.location.href = "/login.html";
 }
 
 function requireUser() {
@@ -189,7 +187,7 @@ async function initializeQuestionnaire() {
   }
 
   if (status?.adksCompleted) {
-    window.location.href = "index.html";
+    window.location.href = "/index.html";
     return;
   }
 
@@ -320,7 +318,7 @@ async function initializeQuestionnaire() {
           incorrectAnswersSummary: incorrectAnswersSummary,
           incorrectAnswersDetails: incorrectAnswersDetails,
         });
-        window.location.href = "index.html";
+        window.location.href = "/index.html";
       } catch (error) {
         showError(error.message || "Erro ao salvar o questionario ADKS.");
       }

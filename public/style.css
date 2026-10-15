@@ -278,7 +278,6 @@ h2 {
 
 .conversation-item.active {
   border-color: var(--accent);
-  box-shadow: 0 10px 24px rgba(34, 197, 94, 0.16);
 }
 
 .conversation-actions {
