@@ -23,10 +23,12 @@ async function appendInitialMessageToConversation(conversationId) {
       return;
     }
 
-    const botMsg = { type: "bot", text: initialMessage };
+    const botMsg = { type: "bot", text: initialMessage, sentAt: new Date().toISOString() };
     conversation.messages.push(botMsg);
     await saveConversations(conversations);
-    appendMessage(initialMessage, "bot");
+    if (currentConversationId === conversationId) {
+      renderMessages(conversationId);
+    }
   } catch (err) {
     console.error("Erro ao buscar mensagem inicial:", err);
   }

@@ -13,26 +13,25 @@ messageMarkdown.renderer.rules.link_open = (tokens, index, options, env, rendere
 messageMarkdown.renderer.rules.table_open = () => '<div class="message-table"><table>\n';
 messageMarkdown.renderer.rules.table_close = () => '</table></div>\n';
 
-function currentTime() {
-  const now = new Date();
-  return now.toLocaleTimeString("pt-BR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 function formatMessageContent(text) {
   return messageMarkdown.render(String(text));
 }
 
-function appendMessage(text, type, timeStr = null) {
+function appendMessage(text, type, sentAt) {
   const article = document.createElement("article");
   article.className = `message ${type}`;
   const content = document.createElement("div");
   content.className = "message-content";
   content.innerHTML = formatMessageContent(text);
   const time = document.createElement("time");
-  time.textContent = timeStr || currentTime();
+  const sentDate = new Date(sentAt);
+  time.dateTime = sentDate.toISOString();
+  time.textContent = sentDate.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  });
+  time.title = sentDate.toLocaleString("pt-BR");
 
   article.appendChild(content);
   article.appendChild(time);
@@ -45,7 +44,7 @@ function renderMessages(conversationId) {
 
   messages.innerHTML = "";
   conversation.messages.forEach((msg) => {
-    appendMessage(msg.text, msg.type);
+    appendMessage(msg.text, msg.type, msg.sentAt);
   });
 }
 

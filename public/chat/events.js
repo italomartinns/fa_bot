@@ -11,7 +11,7 @@ function bindEventHandlers() {
       const conversation = conversations.find((c) => c.id === currentConversationId);
       if (!conversation) return;
 
-      const userMessage = { type: "user", text: value };
+      const userMessage = { type: "user", text: value, sentAt: new Date().toISOString() };
       conversation.messages.push(userMessage);
 
       if (conversation.messages.length === 1) {
@@ -19,13 +19,17 @@ function bindEventHandlers() {
         updateConversationList();
       }
 
-      appendMessage(value, "user");
+      if (currentConversationId === conversation.id) {
+        appendMessage(value, "user", userMessage.sentAt);
+      }
       input.value = "";
 
       // mensagem placeholder de aguardo -- substituir por animacao no futuro
-      const placeholder = { type: "bot", text: "..." };
+      const placeholder = { type: "bot", text: "...", sentAt: new Date().toISOString() };
       conversation.messages.push(placeholder);
-      appendMessage(placeholder.text, "bot");
+      if (currentConversationId === conversation.id) {
+        appendMessage(placeholder.text, "bot", placeholder.sentAt);
+      }
       await saveConversations(conversations);
 
       try {
@@ -39,15 +43,15 @@ function bindEventHandlers() {
         const data = await resp.json().catch(() => ({}));
         const generated = data && data.generated_text ? data.generated_text : "";
 
-        const lastIdx = conversation.messages.length - 1;
-        conversation.messages[lastIdx].text = generated || "Sem resposta do agente.";
+        placeholder.text = generated || "Sem resposta do agente.";
+        placeholder.sentAt = new Date().toISOString();
         await saveConversations(conversations);
-        renderMessages(currentConversationId);
+        if (currentConversationId === conversation.id) renderMessages(conversation.id);
       } catch (err) {
-        const lastIdx = conversation.messages.length - 1;
-        conversation.messages[lastIdx].text = "Erro ao consultar o agente.";
+        placeholder.text = "Erro ao consultar o agente.";
+        placeholder.sentAt = new Date().toISOString();
         await saveConversations(conversations);
-        renderMessages(currentConversationId);
+        if (currentConversationId === conversation.id) renderMessages(conversation.id);
       }
     });
   }

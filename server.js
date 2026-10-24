@@ -95,6 +95,7 @@ async function initializeDatabase() {
         message_order INTEGER NOT NULL,
         message_type TEXT NOT NULL,
         message_text TEXT NOT NULL,
+        sent_at TIMESTAMPTZ NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(conversation_id, message_order),
         FOREIGN KEY(conversation_id) REFERENCES chat_conversations(id) ON DELETE CASCADE
@@ -346,7 +347,7 @@ app.get("/api/chat-history", async (req, res) => {
     }
 
     const messagesResult = await pool.query(
-      `SELECT c.conversation_key, m.message_order, m.message_type, m.message_text
+      `SELECT c.conversation_key, m.message_order, m.message_type, m.message_text, m.sent_at
        FROM chat_conversations c
        LEFT JOIN chat_messages m ON m.conversation_id = c.id
        WHERE c.user_id = $1
@@ -376,6 +377,7 @@ app.get("/api/chat-history", async (req, res) => {
       conversation.messages.push({
         type: row.message_type,
         text: row.message_text,
+        sentAt: row.sent_at.toISOString(),
       });
     }
 
@@ -399,6 +401,17 @@ app.post("/api/chat-history", async (req, res) => {
 
     if (!Array.isArray(conversations)) {
       return res.status(400).json({ message: "Histórico inválido." });
+    }
+
+    for (const conversation of conversations) {
+      for (const message of (Array.isArray(conversation?.messages) ? conversation.messages : [])) {
+        if (typeof message?.sentAt !== "string" ||
+            !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(message.sentAt) ||
+            !Number.isFinite(Date.parse(message.sentAt)) ||
+            new Date(message.sentAt).toISOString() !== message.sentAt) {
+          return res.status(400).json({ message: "Horário de mensagem inválido." });
+        }
+      }
     }
 
     const client = await pool.connect();
@@ -452,9 +465,9 @@ app.post("/api/chat-history", async (req, res) => {
         );
 
         const conversationDbId = insertedConversation.rows[0].id;
-        await client.query("DELETE FROM chat_messages WHERE conversation_id = $1", [conversationDbId]);
 
         const messages = Array.isArray(conversation.messages) ? conversation.messages : [];
+        const messageOrders = [];
         for (let messageIndex = 0; messageIndex < messages.length; messageIndex += 1) {
           const message = messages[messageIndex] || {};
           if (typeof message.text !== "string") {
@@ -462,12 +475,22 @@ app.post("/api/chat-history", async (req, res) => {
           }
 
           const messageType = message.type === "user" ? "user" : "bot";
+          messageOrders.push(messageIndex);
           await client.query(
-            `INSERT INTO chat_messages (conversation_id, message_order, message_type, message_text)
-             VALUES ($1, $2, $3, $4)`,
-            [conversationDbId, messageIndex, messageType, message.text]
+            `INSERT INTO chat_messages (conversation_id, message_order, message_type, message_text, sent_at)
+             VALUES ($1, $2, $3, $4, $5)
+             ON CONFLICT (conversation_id, message_order) DO UPDATE SET
+             message_type = EXCLUDED.message_type,
+             message_text = EXCLUDED.message_text,
+             sent_at = EXCLUDED.sent_at`,
+            [conversationDbId, messageIndex, messageType, message.text, message.sentAt]
           );
         }
+        await client.query(
+          `DELETE FROM chat_messages WHERE conversation_id = $1
+           AND NOT (message_order = ANY($2::integer[]))`,
+          [conversationDbId, messageOrders]
+        );
       }
 
       await client.query("COMMIT");
