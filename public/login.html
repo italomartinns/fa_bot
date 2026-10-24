@@ -26,7 +26,7 @@
         <form id="loginForm" class="auth-form" autocomplete="off">
           <div class="auth-field">
             <label for="loginUsername">Username</label>
-            <input id="loginUsername" name="username" type="text" required />
+            <input id="loginUsername" name="username" type="text" pattern="[a-zA-Z0-9._]+" title="Use apenas letras (a-z), números, ponto e sublinhado (_), sem espaços." autocapitalize="none" spellcheck="false" required />
           </div>
           <div class="auth-field">
             <label for="loginPassword">Senha</label>

@@ -112,6 +112,12 @@ function normalizeUsername(value) {
   return value.trim().toLowerCase();
 }
 
+function isValidUsername(value) {
+  return typeof value === "string" && value.length > 0 && !/[^a-zA-Z0-9._]/.test(value);
+}
+
+const USERNAME_ERROR = "Use apenas letras (a-z), números, ponto e sublinhado (_) no username, sem espaços.";
+
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
@@ -126,6 +132,10 @@ app.post("/api/register", async (req, res) => {
 
     if (!name || !username || !password) {
       return res.status(400).json({ message: "Preencha todos os campos." });
+    }
+
+    if (!isValidUsername(username)) {
+      return res.status(400).json({ message: USERNAME_ERROR });
     }
 
     if (password.length < 6) {
@@ -156,6 +166,10 @@ app.post("/api/login", async (req, res) => {
 
     if (!username || !password) {
       return res.status(400).json({ message: "Preencha username e senha." });
+    }
+
+    if (!isValidUsername(username)) {
+      return res.status(400).json({ message: USERNAME_ERROR });
     }
 
     const cleanUsername = normalizeUsername(username);

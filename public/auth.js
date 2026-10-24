@@ -1,4 +1,27 @@
 const CURRENT_USER_KEY = "fa_current_user";
+const USERNAME_ERROR = "Use apenas letras (a-z), números, ponto e sublinhado (_) no username, sem espaços.";
+
+function isValidUsername(value) {
+  return typeof value === "string" && value.length > 0 && !/[^a-zA-Z0-9._]/.test(value);
+}
+
+function filterUsernameInput(event) {
+  if (event.isComposing) return;
+  const input = event.target;
+  const value = input.value;
+  const cleanValue = value.replace(/[^a-zA-Z0-9._]/g, "");
+  if (value === cleanValue) return;
+
+  const start = value.slice(0, input.selectionStart).replace(/[^a-zA-Z0-9._]/g, "").length;
+  const end = value.slice(0, input.selectionEnd).replace(/[^a-zA-Z0-9._]/g, "").length;
+  input.value = cleanValue;
+  input.setSelectionRange(start, end);
+}
+
+document.querySelectorAll('input[name="username"]').forEach((input) => {
+  input.addEventListener("input", filterUsernameInput);
+  input.addEventListener("compositionend", filterUsernameInput);
+});
 
 async function apiPost(path, payload) {
   const url = window.API_CONFIG.getApiUrl(path);
@@ -58,6 +81,10 @@ if (loginForm) {
 
     const usernameInput = document.getElementById("loginUsername");
     const passwordInput = document.getElementById("loginPassword");
+    if (!isValidUsername(usernameInput.value)) {
+      showError(USERNAME_ERROR);
+      return;
+    }
     const username = normalizeUsername(usernameInput.value);
     const password = passwordInput.value.trim();
 
@@ -87,6 +114,10 @@ if (registerForm) {
     const passwordInput = document.getElementById("registerPassword");
     const confirmInput = document.getElementById("registerConfirm");
 
+    if (!isValidUsername(usernameInput.value)) {
+      showError(USERNAME_ERROR);
+      return;
+    }
     const name = nameInput.value.trim();
     const username = normalizeUsername(usernameInput.value);
     const password = passwordInput.value.trim();
