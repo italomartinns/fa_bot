@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
 
 :root {
+  color-scheme: dark;
   --bg-warm: #0f0f0f;
   --bg-soft: #1a1a1a;
   --panel: rgba(20, 20, 20, 0.95);
@@ -49,6 +50,10 @@ body {
   height: 100%;
 }
 
+html {
+  background-color: var(--bg-warm);
+}
+
 body {
   margin: 0;
   color: var(--text);
@@ -57,6 +62,7 @@ body {
     radial-gradient(ellipse at 16% 8%, rgba(89, 111, 95, 0.32), transparent 42%),
     radial-gradient(ellipse at 88% 90%, rgba(65, 88, 70, 0.28), transparent 46%),
     linear-gradient(145deg, #292d2a 0%, #202522 54%, #191e1b 100%);
+  background-color: var(--bg-warm);
   overflow: hidden;
 }
 
@@ -704,6 +710,7 @@ h2 {
 
 .auth-body {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   place-items: center;
   padding: 24px;
   overflow: auto;
@@ -712,7 +719,8 @@ h2 {
 .auth-shell {
   position: relative;
   z-index: 1;
-  width: min(520px, 92vw);
+  width: min(520px, 100%);
+  min-width: 0;
   padding: 18px;
   border-radius: 28px;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -721,6 +729,7 @@ h2 {
 }
 
 .auth-card {
+  min-width: 0;
   background: rgba(22, 22, 22, 0.96);
   border-radius: 22px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -740,11 +749,13 @@ h2 {
 }
 
 .auth-form {
+  min-width: 0;
   display: grid;
   gap: 12px;
 }
 
 .auth-field {
+  min-width: 0;
   display: grid;
   gap: 6px;
 }
@@ -756,6 +767,7 @@ h2 {
 
 .auth-field input:not([type="radio"]):not([type="checkbox"]) {
   width: 100%;
+  min-width: 0;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   padding: 12px 14px;
@@ -766,6 +778,7 @@ h2 {
 
 .auth-field select {
   width: 100%;
+  min-width: 0;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   padding: 12px 14px;
@@ -840,7 +853,7 @@ h2 {
 }
 
 .questionnaire-shell {
-  width: min(760px, 94vw);
+  width: min(760px, 100%);
 }
 
 .questionnaire-card {
