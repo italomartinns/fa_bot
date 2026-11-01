@@ -19,6 +19,7 @@ function bindEventHandlers() {
       pendingReplies.set(conversation.id, (pendingReplies.get(conversation.id) || 0) + 1);
       renderMessages(conversation.id);
       messages.scrollTop = messages.scrollHeight;
+      let replyIndex = -1;
 
       try {
         if (isFirstMessage) {
@@ -38,10 +39,12 @@ function bindEventHandlers() {
         const data = await resp.json().catch(() => ({}));
         const generated = data && data.generated_text ? data.generated_text : "";
         if (conversations.includes(conversation)) {
+          replyIndex = conversation.messages.length;
           conversation.messages.push({ type: "bot", text: generated || "Sem resposta do agente.", sentAt: new Date().toISOString() });
         }
       } catch (err) {
         if (conversations.includes(conversation)) {
+          replyIndex = conversation.messages.length;
           conversation.messages.push({ type: "bot", text: "Erro ao consultar o agente.", sentAt: new Date().toISOString() });
         }
       } finally {
@@ -50,7 +53,10 @@ function bindEventHandlers() {
         else pendingReplies.delete(conversation.id);
         if (currentConversationId === conversation.id) {
           renderMessages(conversation.id);
-          messages.scrollTop = messages.scrollHeight;
+          const reply = messages.children[replyIndex];
+          if (reply) {
+            messages.scrollTop += reply.getBoundingClientRect().top - messages.getBoundingClientRect().top;
+          }
         }
         if (conversations.includes(conversation)) {
           try { await saveConversations(conversations); }

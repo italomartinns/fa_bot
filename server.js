@@ -697,7 +697,10 @@ if (profileResult.rows.length > 0) {
 
     res.json({ generated_text: generatedText });
   } catch (error) {
-    console.error("Erro /api/agent:", error.message);
+    console.error("Erro /api/agent:", error.message, {
+      cause: error.cause?.code || error.cause?.name || null,
+      errors: error.cause?.errors?.map((item) => item.code || item.name),
+    });
     res.status(500).json({ message: "Erro ao processar pergunta." });
   }
 });

@@ -51,11 +51,13 @@ function renderMessages(conversationId) {
   const conversation = conversations.find((c) => c.id === conversationId);
   if (!conversation) return;
 
+  const previousScrollTop = messages.scrollTop;
   messages.innerHTML = "";
   conversation.messages.forEach((msg) => {
     appendMessage(msg.text, msg.type, msg.sentAt);
   });
   if (pendingReplies.get(conversationId)) appendTypingIndicator();
+  messages.scrollTop = previousScrollTop;
 }
 
 function renderConversation(conversationId) {
