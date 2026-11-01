@@ -22,6 +22,12 @@
         <h2 id="profileTitle">Dados pessoais</h2>
         <p>Informações sobre você e sua situação atual.</p>
       </div>
+      <div class="settings-profile-fields" id="profileFields" aria-busy="true">
+      <div class="settings-fields settings-skeleton" id="profileLoading" role="status" aria-label="Carregando dados pessoais">
+        <div><span></span><span></span></div><div><span></span><span></span></div>
+        <div><span></span><span></span></div><div><span></span><span></span></div>
+        <div><span></span><span></span></div>
+      </div>
       <form class="auth-form settings-fields" id="settingsForm" hidden>
         <div class="auth-field"><label for="settingsName">Nome</label><input id="settingsName" name="name" required /></div>
         <div class="auth-field"><label for="settingsUsername">Username</label><input id="settingsUsername" name="username" pattern="[a-zA-Z0-9._]+" title="Use letras, números, ponto ou sublinhado, sem espaços." required /></div>
@@ -31,6 +37,7 @@
         </select></div>
         <div class="auth-field"><label for="settingsCaregiver">Você é cuidador atualmente?</label><select id="settingsCaregiver" name="caregiver" required><option value="" disabled hidden>Selecione</option><option value="true">Sim</option><option value="false">Não</option></select></div>
       </form>
+      </div>
     </section>
     <section class="settings-section" aria-labelledby="securityTitle">
       <div class="settings-section-heading">

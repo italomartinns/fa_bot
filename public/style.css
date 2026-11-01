@@ -248,6 +248,20 @@ h2 {
 .settings-section-heading h2 { font-size: 1.15rem; line-height: 1.3; }
 .settings-section-heading p { margin: 8px 0 0; color: var(--muted); font-size: 0.9rem; }
 .settings-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.settings-skeleton { display: grid; }
+.settings-skeleton[hidden] { display: none; }
+.settings-skeleton > div { display: grid; gap: 6px; }
+.settings-skeleton span {
+  display: block;
+  height: 46px;
+  border-radius: 12px;
+  background: linear-gradient(100deg, #292929 20%, #3b3b3b 40%, #292929 60%);
+  background-size: 200% 100%;
+  animation: settings-loading 1.4s ease-in-out infinite;
+}
+.settings-skeleton span:first-child { width: 45%; height: 14px; border-radius: 5px; }
+@keyframes settings-loading { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .settings-skeleton span { animation: none; } }
 .settings-section .settings-action { max-width: 240px; justify-self: start; }
 .settings-footer { display: flex; align-items: center; justify-content: flex-end; gap: 16px; padding: 8px 0; }
 .settings-footer .settings-status { margin-right: auto; }

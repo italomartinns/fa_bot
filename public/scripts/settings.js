@@ -74,6 +74,10 @@ async function loadSettings() {
     form.hidden = false;
     document.getElementById("saveSettings").hidden = false;
   } catch (error) { showStatus(error.message, true); }
+  finally {
+    document.getElementById("profileLoading").hidden = true;
+    document.getElementById("profileFields").setAttribute("aria-busy", "false");
+  }
 }
 
 form.addEventListener("submit", async (event) => {
