@@ -7,7 +7,7 @@ const {
   ADKS_QUESTIONS,
   ADKS_EXPLANATIONS,
   ADKS_CORRECT_ANSWERS,
-} = require("./public/adks_data.js");
+} = require("./public/questionnaire/adks_data.js");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
