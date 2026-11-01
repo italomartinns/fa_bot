@@ -1,0 +1,68 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f0f0f" />
+  <meta name="color-scheme" content="dark" />
+  <title>Configurações | Forcare Alzheimer</title>
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+</head>
+<body class="auth-body settings-body">
+  <main class="settings-shell">
+    <header class="settings-header">
+      <a class="settings-back" href="/index.html">← Voltar às conversas</a>
+      <p class="eyebrow">Sua conta</p>
+      <h1 class="auth-title">Configurações</h1>
+      <p class="auth-subtitle">Gerencie seus dados e sua conta em um só lugar.</p>
+    </header>
+    <section class="settings-section" aria-labelledby="profileTitle">
+      <div class="settings-section-heading">
+        <h2 id="profileTitle">Dados pessoais</h2>
+        <p>Informações sobre você e sua situação atual.</p>
+      </div>
+      <form class="auth-form settings-fields" id="settingsForm" hidden>
+        <div class="auth-field"><label for="settingsName">Nome</label><input id="settingsName" name="name" required /></div>
+        <div class="auth-field"><label for="settingsUsername">Username</label><input id="settingsUsername" name="username" pattern="[a-zA-Z0-9._]+" title="Use letras, números, ponto ou sublinhado, sem espaços." required /></div>
+        <div class="auth-field"><label for="settingsBirth">Data de nascimento</label><input id="settingsBirth" name="dateOfBirth" type="text" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" title="Use o formato DD/MM/AAAA." required /></div>
+        <div class="auth-field"><label for="settingsMarital">Estado civil</label><select id="settingsMarital" name="maritalStatus" required>
+          <option value="" disabled hidden>Selecione</option><option value="Casado">Casado</option><option value="Uniao estavel">União estável</option><option value="Solteiro">Solteiro</option><option value="Divorciado">Divorciado</option><option value="Viuvo">Viúvo</option>
+        </select></div>
+        <div class="auth-field"><label for="settingsCaregiver">Você é cuidador atualmente?</label><select id="settingsCaregiver" name="caregiver" required><option value="" disabled hidden>Selecione</option><option value="true">Sim</option><option value="false">Não</option></select></div>
+      </form>
+    </section>
+    <section class="settings-section" aria-labelledby="securityTitle">
+      <div class="settings-section-heading">
+        <h2 id="securityTitle">Segurança</h2>
+        <p>Atualize a senha usada para acessar sua conta.</p>
+      </div>
+      <button class="logout-btn settings-logout settings-action" id="openPasswordDialog" type="button">Trocar senha</button>
+    </section>
+    <section class="settings-section" aria-labelledby="accountTitle">
+      <div class="settings-section-heading">
+        <h2 id="accountTitle">Conta</h2>
+        <p>Encerre sua sessão neste dispositivo.</p>
+      </div>
+      <button class="logout-btn settings-logout settings-signout settings-action" id="settingsLogout" type="button">Sair da conta</button>
+    </section>
+    <div class="settings-footer">
+      <p class="settings-status" id="settingsStatus" role="status" aria-live="polite"></p>
+      <button class="auth-submit" type="submit" form="settingsForm" id="saveSettings" hidden>Salvar alterações</button>
+    </div>
+  </main>
+  <dialog class="settings-dialog" id="passwordDialog" aria-labelledby="passwordTitle">
+    <form class="auth-form" id="passwordForm">
+      <h2 id="passwordTitle">Trocar senha</h2>
+      <div class="auth-field"><label for="currentPassword">Senha atual</label><input id="currentPassword" type="password" autocomplete="current-password" required /></div>
+      <div class="auth-field"><label for="newPassword">Nova senha</label><input id="newPassword" type="password" autocomplete="new-password" minlength="6" required /></div>
+      <div class="auth-field"><label for="confirmPassword">Confirme a nova senha</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="6" required /></div>
+      <p class="settings-status error" id="passwordError" role="alert"></p>
+      <button class="auth-submit" type="submit">Alterar senha</button>
+      <button class="logout-btn settings-logout" id="cancelPassword" type="button">Cancelar</button>
+    </form>
+  </dialog>
+  <script src="/config.js"></script>
+  <script src="/settings.js"></script>
+</body>
+</html>

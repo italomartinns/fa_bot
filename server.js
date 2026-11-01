@@ -253,6 +253,80 @@ app.post("/api/profile", async (req, res) => {
   }
 });
 
+app.post("/api/change-password", async (req, res) => {
+  const { userId, currentPassword, newPassword } = req.body || {};
+  const id = Number(userId);
+  if (!Number.isInteger(id) || id <= 0 || typeof currentPassword !== "string" || !currentPassword ||
+      typeof newPassword !== "string" || newPassword !== newPassword.trim() || newPassword.length < 6 ||
+      Buffer.byteLength(newPassword, "utf8") > 72) {
+    return res.status(400).json({ message: "Informe a senha atual e uma nova senha de pelo menos 6 caracteres e no máximo 72 bytes." });
+  }
+  try {
+    const result = await pool.query("SELECT password_hash FROM users WHERE id = $1", [id]);
+    if (!result.rows.length || !(await bcrypt.compare(currentPassword, result.rows[0].password_hash))) {
+      return res.status(401).json({ message: "Senha atual incorreta." });
+    }
+    const oldHash = result.rows[0].password_hash;
+    const newHash = await bcrypt.hash(newPassword, 10);
+    const updated = await pool.query("UPDATE users SET password_hash = $1 WHERE id = $2 AND password_hash = $3", [newHash, id, oldHash]);
+    if (!updated.rowCount) return res.status(409).json({ message: "A senha foi alterada. Tente novamente com a senha atual." });
+    res.json({ ok: true });
+  } catch (error) {
+    console.error("Erro ao alterar senha:", error);
+    res.status(500).json({ message: "Erro ao alterar senha." });
+  }
+});
+
+app.get("/api/settings", async (req, res) => {
+  const userId = Number(req.query.userId);
+  if (!Number.isInteger(userId) || userId <= 0) return res.status(400).json({ message: "Usuário inválido." });
+  try {
+    const result = await pool.query(
+      `SELECT u.id, u.name, u.username, to_char(p.date_of_birth, 'YYYY-MM-DD') AS date_of_birth,
+              p.marital_status, p.caregiver
+       FROM users u JOIN profile_questionnaire p ON p.user_id = u.id WHERE u.id = $1`, [userId]
+    );
+    if (!result.rows.length) return res.status(404).json({ message: "Perfil não encontrado." });
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Erro ao buscar configurações:", error);
+    res.status(500).json({ message: "Erro ao buscar configurações." });
+  }
+});
+
+app.put("/api/settings", async (req, res) => {
+  const { userId, name, username, dateOfBirth, maritalStatus, caregiver } = req.body || {};
+  const id = Number(userId);
+  if (!Number.isInteger(id) || id <= 0 || typeof name !== "string" || !name.trim() || !isValidUsername(username)) {
+    return res.status(400).json({ message: "Informe um nome e username válidos." });
+  }
+  const match = typeof dateOfBirth === "string" && /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateOfBirth);
+  const date = match && new Date(`${dateOfBirth}T00:00:00Z`);
+  if (!match || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== dateOfBirth || match[1] === "0000") {
+    return res.status(400).json({ message: "Data de nascimento inválida." });
+  }
+  if (!["Casado", "Uniao estavel", "União estável", "Solteiro", "Divorciado", "Viuvo", "Viúvo"].includes(maritalStatus) || typeof caregiver !== "boolean") {
+    return res.status(400).json({ message: "Estado civil ou status de cuidador inválido." });
+  }
+  try {
+    const result = await pool.query(
+      `WITH profile AS (
+         UPDATE profile_questionnaire SET date_of_birth = $2, marital_status = $3,
+           caregiver = $4, updated_at = CURRENT_TIMESTAMP WHERE user_id = $1 RETURNING user_id
+       )
+       UPDATE users SET name = $5, username = $6 WHERE id = $1 AND EXISTS (SELECT 1 FROM profile)
+       RETURNING id, name, username`,
+      [id, dateOfBirth, maritalStatus, caregiver, name.trim(), normalizeUsername(username)]
+    );
+    if (!result.rows.length) return res.status(404).json({ message: "Perfil não encontrado." });
+    res.json(result.rows[0]);
+  } catch (error) {
+    if (error.code === "23505") return res.status(409).json({ message: "Esse username já está em uso." });
+    console.error("Erro ao salvar configurações:", error);
+    res.status(500).json({ message: "Erro ao salvar configurações." });
+  }
+});
+
 app.post("/api/adks", async (req, res) => {
   try {
     const { userId, answers, incorrectAnswersDetails } = req.body || {};

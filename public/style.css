@@ -52,6 +52,11 @@ body {
 
 html {
   background-color: var(--bg-warm);
+  background-image:
+    radial-gradient(ellipse at 16% 8%, rgba(89, 111, 95, 0.32), transparent 42%),
+    radial-gradient(ellipse at 88% 90%, rgba(65, 88, 70, 0.28), transparent 46%),
+    linear-gradient(145deg, #292d2a 0%, #202522 54%, #191e1b 100%);
+  background-attachment: fixed;
 }
 
 body {
@@ -59,11 +64,7 @@ body {
   margin: 0;
   color: var(--text);
   font-family: 'Poppins', sans-serif;
-  background:
-    radial-gradient(ellipse at 16% 8%, rgba(89, 111, 95, 0.32), transparent 42%),
-    radial-gradient(ellipse at 88% 90%, rgba(65, 88, 70, 0.28), transparent 46%),
-    linear-gradient(145deg, #292d2a 0%, #202522 54%, #191e1b 100%);
-  background-color: var(--bg-warm);
+  background: transparent;
   overflow: hidden;
 }
 
@@ -209,7 +210,64 @@ h2 {
 .chat-list-footer {
   margin-top: auto;
   padding-top: 6px;
+  display: grid;
+  gap: 10px;
 }
+
+.settings-link {
+  display: block;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--text);
+  text-align: center;
+  text-decoration: none;
+}
+
+.settings-link:hover { border-color: var(--accent); }
+.auth-form[hidden] { display: none; }
+.settings-status { margin: 0; color: var(--accent); }
+.settings-status.error { color: #f87171; }
+.settings-back { color: var(--text); }
+.settings-body { display: block; padding: 32px 24px 48px; }
+.settings-shell { width: min(960px, 100%); margin: 0 auto; display: grid; gap: 16px; }
+.settings-header { display: grid; gap: 10px; padding: 8px 4px 16px; }
+.settings-header .settings-back { justify-self: start; margin-bottom: 18px; text-decoration: none; }
+.settings-header .settings-back:hover { color: var(--accent); }
+.settings-header .eyebrow { margin: 0; }
+.settings-section {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1.6fr);
+  gap: 28px;
+  align-items: start;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--panel);
+}
+.settings-section-heading h2 { font-size: 1.15rem; line-height: 1.3; }
+.settings-section-heading p { margin: 8px 0 0; color: var(--muted); font-size: 0.9rem; }
+.settings-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.settings-section .settings-action { max-width: 240px; justify-self: start; }
+.settings-footer { display: flex; align-items: center; justify-content: flex-end; gap: 16px; padding: 8px 0; }
+.settings-footer .settings-status { margin-right: auto; }
+@media (max-width: 650px) {
+  .settings-body { padding: 24px 16px 32px; }
+  .settings-section { grid-template-columns: 1fr; gap: 20px; padding: 20px; }
+  .settings-fields { grid-template-columns: 1fr; }
+  .settings-section .settings-action { max-width: none; }
+  .settings-footer { flex-direction: column; align-items: stretch; }
+}
+.settings-dialog {
+  width: min(440px, calc(100% - 32px));
+  max-height: calc(100% - 32px);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 24px;
+  color: var(--text);
+  background: #161616;
+}
+.settings-dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
 
 .panel-header {
   display: grid;
@@ -497,12 +555,53 @@ h2 {
   justify-self: end;
 }
 
+.settings-logout {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font: inherit;
+  font-weight: 700;
+}
+
+#openPasswordDialog {
+  border: 1px solid var(--line);
+  padding: 11px 15px;
+}
+
+#openPasswordDialog:hover { border-color: var(--accent); }
+
+.settings-signout {
+  border: 1px solid #ef4444;
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: #f87171;
+  background: transparent;
+  font: inherit;
+}
+
+.logout-btn.settings-signout:hover {
+  border-color: #f87171;
+  background: rgba(239, 68, 68, 0.1);
+}
+
 .logout-btn-sidebar {
   width: 100%;
+  border: 1px solid #ef4444;
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: #f87171;
+  background: transparent;
+  font: inherit;
 }
 
 .logout-btn:hover {
   border-color: var(--accent);
+}
+
+.logout-btn-sidebar:hover {
+  border-color: #f87171;
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .questionnaire-logout-btn {
@@ -1078,6 +1177,7 @@ h2 {
 }
 
 @media (min-width: 901px) {
+  .logout-btn-sidebar { display: none; }
   .menu-toggle,
   .sidebar-close-btn,
   .sidebar-backdrop {
