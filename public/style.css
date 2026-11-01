@@ -55,6 +55,7 @@ html {
 }
 
 body {
+  display: flow-root;
   margin: 0;
   color: var(--text);
   font-family: 'Poppins', sans-serif;
