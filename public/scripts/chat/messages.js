@@ -38,6 +38,15 @@ function appendMessage(text, type, sentAt) {
   messages.appendChild(article);
 }
 
+function appendTypingIndicator() {
+  const indicator = document.createElement("div");
+  indicator.className = "message bot typing-indicator";
+  indicator.setAttribute("role", "status");
+  indicator.setAttribute("aria-label", "Assistente está digitando");
+  indicator.innerHTML = '<span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>';
+  messages.appendChild(indicator);
+}
+
 function renderMessages(conversationId) {
   const conversation = conversations.find((c) => c.id === conversationId);
   if (!conversation) return;
@@ -46,6 +55,7 @@ function renderMessages(conversationId) {
   conversation.messages.forEach((msg) => {
     appendMessage(msg.text, msg.type, msg.sentAt);
   });
+  if (pendingReplies.get(conversationId)) appendTypingIndicator();
 }
 
 function renderConversation(conversationId) {

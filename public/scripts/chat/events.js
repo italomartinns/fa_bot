@@ -14,25 +14,19 @@ function bindEventHandlers() {
       const userMessage = { type: "user", text: value, sentAt: new Date().toISOString() };
       conversation.messages.push(userMessage);
 
-      if (conversation.messages.length === 1) {
-        await renameConversationToFirstMessage(currentConversationId);
-        updateConversationList();
-      }
-
-      if (currentConversationId === conversation.id) {
-        appendMessage(value, "user", userMessage.sentAt);
-      }
       input.value = "";
-
-      // mensagem placeholder de aguardo -- substituir por animacao no futuro
-      const placeholder = { type: "bot", text: "...", sentAt: new Date().toISOString() };
-      conversation.messages.push(placeholder);
-      if (currentConversationId === conversation.id) {
-        appendMessage(placeholder.text, "bot", placeholder.sentAt);
-      }
-      await saveConversations(conversations);
+      const isFirstMessage = conversation.messages.length === 1;
+      pendingReplies.set(conversation.id, (pendingReplies.get(conversation.id) || 0) + 1);
+      renderMessages(conversation.id);
+      messages.scrollTop = messages.scrollHeight;
 
       try {
+        if (isFirstMessage) {
+          await renameConversationToFirstMessage(conversation.id);
+          updateConversationList();
+        } else {
+          await saveConversations(conversations);
+        }
         const url = window.API_CONFIG.getApiUrl('/api/agent');
         const resp = await fetch(url, {
           method: "POST",
@@ -40,18 +34,28 @@ function bindEventHandlers() {
           body: JSON.stringify({ pergunta: value, userId: getCurrentUser()?.id }),
         });
 
+        if (!resp.ok) throw new Error("Erro ao consultar o agente.");
         const data = await resp.json().catch(() => ({}));
         const generated = data && data.generated_text ? data.generated_text : "";
-
-        placeholder.text = generated || "Sem resposta do agente.";
-        placeholder.sentAt = new Date().toISOString();
-        await saveConversations(conversations);
-        if (currentConversationId === conversation.id) renderMessages(conversation.id);
+        if (conversations.includes(conversation)) {
+          conversation.messages.push({ type: "bot", text: generated || "Sem resposta do agente.", sentAt: new Date().toISOString() });
+        }
       } catch (err) {
-        placeholder.text = "Erro ao consultar o agente.";
-        placeholder.sentAt = new Date().toISOString();
-        await saveConversations(conversations);
-        if (currentConversationId === conversation.id) renderMessages(conversation.id);
+        if (conversations.includes(conversation)) {
+          conversation.messages.push({ type: "bot", text: "Erro ao consultar o agente.", sentAt: new Date().toISOString() });
+        }
+      } finally {
+        const remaining = (pendingReplies.get(conversation.id) || 1) - 1;
+        if (remaining) pendingReplies.set(conversation.id, remaining);
+        else pendingReplies.delete(conversation.id);
+        if (currentConversationId === conversation.id) {
+          renderMessages(conversation.id);
+          messages.scrollTop = messages.scrollHeight;
+        }
+        if (conversations.includes(conversation)) {
+          try { await saveConversations(conversations); }
+          catch (error) { console.error("Erro ao salvar conversa:", error); }
+        }
       }
     });
   }

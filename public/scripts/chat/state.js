@@ -15,3 +15,4 @@ const CURRENT_USER_KEY = "fa_current_user";
 
 let conversations = [];
 let currentConversationId = null;
+const pendingReplies = new Map();
