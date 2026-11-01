@@ -8,6 +8,7 @@ async function initializeChat(activeUser) {
   updateConversationList();
   if (currentConversationId) {
     renderConversation(currentConversationId);
+    messages.scrollTop = messages.scrollHeight;
   }
 }
 
