@@ -102,6 +102,14 @@ async function initializeDatabase() {
       );
     `);
 
+    // Existing installations need the column as well as newly created tables.
+    await pool.query(`
+      ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS sent_at TIMESTAMPTZ;
+      UPDATE chat_messages SET sent_at = COALESCE(created_at, CURRENT_TIMESTAMP)
+      WHERE sent_at IS NULL;
+      ALTER TABLE chat_messages ALTER COLUMN sent_at SET NOT NULL;
+    `);
+
     console.log("✅ Banco de dados inicializado");
   } catch (error) {
     console.error("❌ Erro ao inicializar banco:", error.message);
